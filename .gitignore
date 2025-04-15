@@ -1,3 +1,4 @@
 checkpoints
 wandb
 __pycache__
+generated_audio
