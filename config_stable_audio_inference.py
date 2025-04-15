@@ -1,0 +1,48 @@
+def get_config():
+    return {
+        "condition_type": ["dynamics", "rhythm", "melody"],
+        "output_dir": "./generated_audio/",
+        "transformer_ckpt": "./checkpoints/110000_musical attribute_checkpoint/model_3.safetensors",
+        "audio_ckpt": "/home/b06611012/fundwotsai/MuseControlLite/checkpoint_recently/checkpoint-24500_audio_infilling/model.safetensors",
+        "extractor_ckpt": {
+            "dynamics": "./checkpoints/110000_musical attribute_checkpoint/model_1.safetensors",
+            "melody": "./checkpoints/110000_musical attribute_checkpoint/model.safetensors",
+            "rhythm": "./checkpoints/110000_musical attribute_checkpoint/model_2.safetensors",
+        },
+        "GPU_id": "1",
+        "attn_processor_type": "rotary",
+        "apadapter": True,
+        "ap_scale": 1.0,
+        "guidance_scale_text": 7.0,
+        "guidance_scale_con": 1.5,
+        "guidance_scale_audio": 1.0,
+        "denoise_step": 100,
+        "sigma_min": 0.3,
+        "sigma_max": 500,
+        "weight_dtype": "fp16",
+        "negative_text_prompt": "",
+        "mask_start_seconds": 10,
+        "mask_end_seconds": 20,
+        "condition_starts": 10,
+        "no_text": False,
+        "audio_files": [
+            "./melody_condition_audio/49_piano.mp3",
+            "./melody_condition_audio/322_piano.mp3",
+            "./melody_condition_audio/610_bass.mp3",
+            "./melody_condition_audio/785_piano.mp3",
+            "./melody_condition_audio/933_string.mp3",
+            "./melody_condition_audio/1143013.mp3",
+            "./melody_condition_audio/57_jazz.mp3",
+            "./melody_condition_audio/703_mideast.mp3"
+        ],
+        "text": [
+                "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
+                "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
+                "This track composed of electronic instruments gives a sense of opening and clearness.",
+                "This track composed of electronic instruments gives a sense of opening and clearness.",
+                "Hopeful instrumental with guitar being the lead and tabla used for percussion in the middle giving a feeling of going somewhere with positive outlook.",
+                "A string ensemble opens the track with legato, melancholic melodies. The violins and violas play beautifully, while the cellos and bass provide harmonic support for the moving passages. The overall feel is deeply melancholic, with an emotionally stirring performance that remains harmonious and a sense of clearness.",
+                "An exceptionally harmonious string performance with a lively tempo in the first half, transitioning to a gentle and beautiful melody in the second half. It creates a warm and comforting atmosphere, featuring cellos and bass providing a solid foundation, while violins and violas showcase the main theme, all without any noise, resulting in a cohesive and serene sound.",
+                "Pop solo piano instrumental song. Simple harmony and emotional theme. Makes you feel nostalgic and wanting a cup of warm tea sitting on the couch while holding the person you love.",
+                ]
+    }
