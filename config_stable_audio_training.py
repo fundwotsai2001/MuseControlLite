@@ -5,16 +5,15 @@ def get_config():
         "meta_data_path": "./Qwen_caption.json",
         "audio_data_dir": "../mtg_full_47s",
         "audio_codec_root": "../mtg_full_47s_codec",
-        "output_dir": "./checkpoints/stable_audio_new_fast_all",
-        "transformer_ckpt": "./checkpoints/110000_musical attribute_checkpoint/model_3.safetensors",
-        "audio_ckpt": "/home/b06611012/fundwotsai/MuseControlLite/checkpoint_recently/checkpoint-24500_audio_infilling/model.safetensors",
+        "output_dir": "./checkpoints/stable_audio_new_fast_all_v2",
+        "transformer_ckpt": "./checkpoints/stable_audio_new_fast_all/checkpoint-11000/model_3.safetensors",
         "extractor_ckpt": {
-            "dynamics": "./checkpoints/110000_musical attribute_checkpoint/model_1.safetensors",
-            "melody": "./checkpoints/110000_musical attribute_checkpoint/model.safetensors",
-            "rhythm": "./checkpoints/110000_musical attribute_checkpoint/model_2.safetensors",
+            "dynamics": "./checkpoints/stable_audio_new_fast_all/checkpoint-11000/model_1.safetensors",
+            "melody": "./checkpoints/stable_audio_new_fast_all/checkpoint-11000/model.safetensors",
+            "rhythm": "./checkpoints/stable_audio_new_fast_all/checkpoint-11000/model_2.safetensors",
         },
         # training hyperparameters
-        "GPU_id" : "1",
+        "GPU_id" : "0",
         "train_batch_size": 16,
         "learning_rate": 1e-4,
         "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
