@@ -2,3 +2,4 @@ checkpoints
 wandb
 __pycache__
 generated_audio
+not_using

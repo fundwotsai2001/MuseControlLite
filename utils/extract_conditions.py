@@ -89,7 +89,7 @@ def compute_dynamics(audio_file, hop_length=160, target_sample_rate=44100, cut=F
         resampler = torchaudio.transforms.Resample(orig_freq=original_sample_rate, new_freq=target_sample_rate)
         waveform = resampler(waveform)
     if cut:
-        waveform = waveform[:, :1324800]
+        waveform = waveform[:, :2097152]
     # Ensure waveform has a single channel (e.g., select the first channel if multi-channel)
     waveform = waveform.mean(dim=0, keepdim=True)  # Mix all channels into one
     waveform = waveform.clamp(-1, 1).numpy()

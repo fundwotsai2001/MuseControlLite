@@ -52,36 +52,6 @@ import datetime
 import torch.distributed as dist
 import time
 
-
-
-def print_tensor_info(tensor, tensor_name):
-    print(f"{tensor_name} - Device: {tensor.device}, Shape: {tensor.shape}, Version: {tensor._version}")
-def zero_module(module):
-    for p in module.parameters():
-        nn.init.zeros_(p)
-    return module
-
-def load_audio_file(filename):
-    try:
-        # Use torchaudio to load the file regardless of format
-        audio, in_sr = torchaudio.load(filename)
-        
-        # Resample if necessary
-        if in_sr != 44100:
-            resample_tf = T.Resample(in_sr, 44100)
-            audio = resample_tf(audio)
-        
-        return audio
-
-    except FileNotFoundError:
-        print(f"Error: File {filename} not found.")
-        return None
-    except RuntimeError as e:
-        print(f"Error: Unable to process file {filename}. {e}")
-        return None
-    except Exception as e:
-        print(f"Unexpected error while loading {filename}: {e}")
-        return None
 class AudioInversionDataset(Dataset):
     def __init__(
         self,
@@ -140,7 +110,6 @@ class AudioInversionDataset(Dataset):
         audio_token_path = os.path.join(self.audio_codec_root, audio_path.replace('mp3', 'pth'))
         audio = torch.load(audio_token_path, map_location=torch.device('cpu'))
         
-        
         load_codec_time = time.time() - codec_start
         end_time = time.time() - start_time
 
@@ -161,9 +130,8 @@ class AudioInversionDataset(Dataset):
 
     
 class CollateFunction:
-    def __init__(self, condition_type, mode="train"):
+    def __init__(self, condition_type):
         self.condition_type = condition_type
-        self.mode = mode  # "train" or "val"
     def __call__(self, examples):
         import time
         start_time = time.time()
@@ -394,17 +362,17 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
         masked_extracted_melody_condition = F.interpolate(masked_extracted_melody_condition, size=1024, mode='linear', align_corners=False)
         # masked_extracted_audio_condition = F.interpolate(masked_extracted_audio_condition, size=1024, mode='linear', align_corners=False)
         ## concat conditions
-        if step < 3:
-            extracted_rhythm_condition[:,:,:512] = 0
-            extracted_melody_condition[:,:,:512] = 0
-            extracted_dynamics_condition[:,:,:512] = 0
-            extracted_audio_condition[:,:,512:] = 0
-        elif step < 6:
-            extracted_rhythm_condition[:,:,512:] = 0
-            extracted_melody_condition[:,:,512:] = 0
-            extracted_dynamics_condition[:,:,512:] = 0
-            extracted_audio_condition[:,:,:512] = 0
-        # extracted_audio_condition[:,:,:] = 0 # pause audio condition
+        # if step < 3:
+        #     extracted_rhythm_condition[:,:,:512] = 0
+        #     extracted_melody_condition[:,:,:512] = 0
+        #     extracted_dynamics_condition[:,:,:512] = 0
+        #     extracted_audio_condition[:,:,512:] = 0
+        # elif step < 6:
+        #     extracted_rhythm_condition[:,:,512:] = 0
+        #     extracted_melody_condition[:,:,512:] = 0
+        #     extracted_dynamics_condition[:,:,512:] = 0
+        #     extracted_audio_condition[:,:,:512] = 0
+        extracted_audio_condition[:,:,:] = 0 # pause audio condition
         extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
         masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, masked_extracted_audio_condition), dim=1)
         extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition), dim=0)
@@ -685,8 +653,8 @@ def main():
     # Ensure consistent splitting
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
     # DataLoader
-    train_collate_fn = CollateFunction(condition_type=config["condition_type"], mode="train")
-    val_collate_fn = CollateFunction(condition_type=config["condition_type"], mode="val")
+    train_collate_fn = CollateFunction(condition_type=config["condition_type"])
+    val_collate_fn = CollateFunction(condition_type=config["condition_type"])
     train_dataloader = DataLoader(
         dataset=train_dataset,
         batch_size=config["train_batch_size"],
@@ -739,7 +707,15 @@ def main():
     # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
-        accelerator.init_trackers("dreambooth_audio", config)
+        accelerator.init_trackers(
+            project_name="MuseControlLite",      # your W&B project
+            config=config,                        # whatever hyperparams you’re logging
+            init_kwargs={
+                "wandb": {
+                    "name": "my_experiment_run_01",   # <— your chosen run name
+                }
+            }
+        )
 
     global_step = 0
     first_epoch = 0

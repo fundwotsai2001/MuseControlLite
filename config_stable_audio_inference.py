@@ -1,29 +1,38 @@
 def get_config():
     return {
-        "condition_type": ["dynamics", "rhythm", "melody"],
-        "output_dir": "./generated_audio/",
-        "transformer_ckpt": "./checkpoints/110000_musical_attribute_checkpoint/model_3.safetensors",
+        "condition_type": ["rhythm", "audio"], # options: "dynamics", "rhythm", "melody", "audio"
+        "output_dir": "./generated_audio/melody_audio",
+        #Checkpoints
+        ###############
+        "transformer_ckpt": "./checkpoints/38000_audio_110000_musical_attribute/model_3.safetensors",
         "extractor_ckpt": {
-            "dynamics": "./checkpoints/110000_musical_attribute_checkpoint/model_1.safetensors",
-            "melody": "./checkpoints/110000_musical_attribute_checkpoint/model.safetensors",
-            "rhythm": "./checkpoints/110000_musical_attribute_checkpoint/model_2.safetensors",
+            "dynamics": "./checkpoints/38000_audio_110000_musical_attribute/model_1.safetensors",
+            "melody": "./checkpoints/38000_audio_110000_musical_attribute/model.safetensors",
+            "rhythm": "./checkpoints/38000_audio_110000_musical_attribute/model_2.safetensors",
         },
-        "GPU_id": "0",
-        "attn_processor_type": "rotary",
-        "apadapter": True,
-        "ap_scale": 1.0,
+        ###############
+        "GPU_id": "2",
+        "attn_processor_type": "rotary", # Currently no other available.
+        "apadapter": True, # True for MuseControlLite, False for original Stable-audio
+        "ap_scale": 1.0, # recommend 1.0 for MuseControlLite, other values are not tested
         "guidance_scale_text": 7.0,
-        "guidance_scale_con": 1.0,
-        "guidance_scale_audio": 1.0,
-        "denoise_step": 100,
-        "sigma_min": 0.3,
-        "sigma_max": 500,
+        "guidance_scale_con": 1.0, # Note that if guidance scale is too large, the audio quality will be bad. 
+        "denoise_step": 50,
+        "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
+        "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad. 
         "weight_dtype": "fp16",
         "negative_text_prompt": "",
-        "mask_start_seconds": 10,
-        "mask_end_seconds": 20,
-        "condition_starts": 10,
-        "no_text": False,
+
+        # The below two mask are complementary, which means in every time slice if audio is given, musical attribute condition will be droped
+        # Only one of use_audio_mask and use_musical_attribute_mask should be set to True
+        "use_audio_mask": True,
+        "audio_mask_start_seconds": 24,
+        "audio_mask_end_seconds": 2097152 / 44100,
+        "use_musical_attribute_mask": False,
+        "musical_attribute_mask_start_seconds": 25,
+        "musical_attribute_mask_end_seconds": 2097152 / 44100 ,
+
+        "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
         "audio_files": [
             "./melody_condition_audio/49_piano.mp3",
             "./melody_condition_audio/322_piano.mp3",
@@ -34,6 +43,8 @@ def get_config():
             "./melody_condition_audio/703_mideast.mp3"
         ],
         "text": [
+                "",
+                "",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",
