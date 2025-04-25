@@ -84,7 +84,7 @@ class AudioInversionDataset(Dataset):
         start_time = time.time()
         meta_entry = self.meta[i]
         audio_path = meta_entry.get('path')
-        
+    
         # Build file paths
         def build_path(root, path, ext_in='.mp3', ext_out='.npy'):
             file_name = path.replace("/", "_").replace(ext_in, ext_out)
@@ -96,27 +96,17 @@ class AudioInversionDataset(Dataset):
 
         # Load numpy arrays concurrently
         def load_npy(path):
-            return np.load(path)  # Using mmap_mode for potential speed benefits
-        
+            return np.load(path) 
         melody_curve = load_npy(melody_path)
         rhythm_curve = load_npy(rhythm_path)
         dynamics_curve = load_npy(dynamics_path)
         
-        load_condition_time = time.time() - start_time
-
-        # Load codec files concurrently if possible
-        codec_start = time.time()
+        # Load audio tokens, they are encoded with the Stable-audio VAE and saved, skipping the the VAE encoding process saves memory when training MuseControlLite
         audio_full_path = os.path.join(self.audio_data_root, audio_path)
         audio_token_path = os.path.join(self.audio_codec_root, audio_path.replace('mp3', 'pth'))
         audio = torch.load(audio_token_path, map_location=torch.device('cpu'))
         
-        load_codec_time = time.time() - codec_start
-        end_time = time.time() - start_time
-
         example = {
-            "getitem_time": end_time,
-            "load_codec_time": load_codec_time,
-            "load_condition_time": load_condition_time,
             "text": meta_entry['Qwen_caption'],
             "audio_full_path": audio_full_path,
             "audio": audio,
@@ -127,20 +117,11 @@ class AudioInversionDataset(Dataset):
             "seconds_end": 2097152 / 44100,
         }
         return example
-
     
 class CollateFunction:
     def __init__(self, condition_type):
         self.condition_type = condition_type
     def __call__(self, examples):
-        import time
-        start_time = time.time()
-        getitem_time = [example["getitem_time"] for example in examples]
-        getitem_time_mean = sum(getitem_time) / len(getitem_time)
-        load_codec_time = [example["load_codec_time"] for example in examples]
-        load_codec_time_mean = sum(load_codec_time) / len(load_codec_time)
-        load_condition_time = [example["load_condition_time"] for example in examples]
-        load_condition_time_mean = sum(load_condition_time) / len(load_condition_time)
         audio = [example["audio"] for example in examples]
         prompt_texts = [example["text"] for example in examples]
         audio_full_path = [example["audio_full_path"] for example in examples]
@@ -156,14 +137,8 @@ class CollateFunction:
             dynamics_condition = torch.stack(dynamics_condition)
             melody_condition = [torch.tensor(cond) for cond in melody_condition]
             melody_condition = torch.stack(melody_condition)
-            # melody_condition = melody_condition.float()  # Convert to float
             audio = torch.stack(audio).float()   
-            elapsed = time.time() - start_time        
             batch = {
-                "getitem_time_mean": getitem_time_mean,
-                "load_codec_time_mean": load_codec_time_mean,
-                "load_condition_time_mean": load_condition_time_mean,
-                "collate_time_spend": elapsed,
                 "audio_full_path": audio_full_path,
                 "audio": audio,
                 "rhythm_condition": rhythm_condition,
@@ -239,8 +214,7 @@ class rhythm_extractor(nn.Module):
         x = F.silu(x)
         x = self.conv1d_5(x) # shape: (batchsize, 192, 750)
         return x
-import numpy as np
-
+    
 def evaluate_f1_rhythm(input_timestamps, generated_timestamps, tolerance=0.07):
     """
     Evaluates precision, recall, and F1-score for beat/downbeat timestamp alignment.
@@ -341,13 +315,7 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
         audio_condition = batch["audio"]
         desired_repeats = 192 // 64  # Number of repeats needed
         extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1)
-        ### unconditioned
-        # print(extracted_melody_condition.shape, batch["dynamics_condition"].shape)
-        # print(extracted_dynamics_condition.shape, batch["rhythm_condition"].shape)
-        # print(extracted_rhythm_condition.shape, batch["melody_condition"].shape)
-        # print(extracted_melody_condition.shape, extracted_melody_condition.shape)
-        # print(extracted_dynamics_condition.shape, extracted_dynamics_condition.shape)
-        # print(extracted_rhythm_condition.shape, extracted_rhythm_condition.shape)
+
         masked_extracted_melody_condition = torch.full_like(extracted_melody_condition.to(torch.float32), fill_value=0)
         masked_extracted_dynamics_condition = torch.full_like(extracted_dynamics_condition.to(torch.float32), fill_value=0)
         masked_extracted_rhythm_condition = torch.full_like(extracted_rhythm_condition.to(torch.float32), fill_value=0)
@@ -356,23 +324,21 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
         extracted_rhythm_condition = F.interpolate(extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
         extracted_dynamics_condition = F.interpolate(extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
         extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
-        # extracted_audio_condition = F.interpolate(extracted_audio_condition, size=1024, mode='linear', align_corners=False)
         masked_extracted_rhythm_condition = F.interpolate(masked_extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
         masked_extracted_dynamics_condition = F.interpolate(masked_extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
         masked_extracted_melody_condition = F.interpolate(masked_extracted_melody_condition, size=1024, mode='linear', align_corners=False)
-        # masked_extracted_audio_condition = F.interpolate(masked_extracted_audio_condition, size=1024, mode='linear', align_corners=False)
-        ## concat conditions
-        # if step < 3:
-        #     extracted_rhythm_condition[:,:,:512] = 0
-        #     extracted_melody_condition[:,:,:512] = 0
-        #     extracted_dynamics_condition[:,:,:512] = 0
-        #     extracted_audio_condition[:,:,512:] = 0
-        # elif step < 6:
-        #     extracted_rhythm_condition[:,:,512:] = 0
-        #     extracted_melody_condition[:,:,512:] = 0
-        #     extracted_dynamics_condition[:,:,512:] = 0
-        #     extracted_audio_condition[:,:,:512] = 0
-        extracted_audio_condition[:,:,:] = 0 # pause audio condition
+        # concat conditions
+        if step < 3:
+            extracted_rhythm_condition[:,:,:512] = 0
+            extracted_melody_condition[:,:,:512] = 0
+            extracted_dynamics_condition[:,:,:512] = 0
+            extracted_audio_condition[:,:,512:] = 0
+        elif step < 6:
+            extracted_rhythm_condition[:,:,512:] = 0
+            extracted_melody_condition[:,:,512:] = 0
+            extracted_dynamics_condition[:,:,512:] = 0
+            extracted_audio_condition[:,:,:512] = 0
+        # extracted_audio_condition[:,:,:] = 0 # pause audio condition
         extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
         masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, masked_extracted_audio_condition), dim=1)
         extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition), dim=0)
@@ -397,14 +363,8 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
         output = audio[0].T.float().cpu().numpy()
         gen_file = os.path.join(val_audio_dir, f"validation_{step}.wav")
         original_file = os.path.join(val_audio_dir, f"original_{step}.wav")
-        # original_audio = batch["audio"][0].T.float().cpu().numpy()
         sf.write(gen_file, output, pipeline.vae.sampling_rate)
         shutil.copy(audio_full_path[0], original_file)
-        # while not os.path.exists(gen_file):
-        #     time.sleep(0.1)
-        # while not os.path.exists(original_file):
-        #     time.sleep(0.1)
-        # sf.write(original_file, original_audio, pipeline.vae.sampling_rate) 
         if "dynamics" in condition_type:
             gen_dynamics = compute_dynamics(gen_file)
             original_dynamics = compute_dynamics(original_file)
@@ -510,7 +470,6 @@ def check_and_print_non_float32_parameters(model):
     else:
         print("All parameters are in float32.")
 
-
 def main():
     torch.manual_seed(42)
     config = get_config()
@@ -529,7 +488,7 @@ def main():
     if accelerator.is_main_process:
         if config["output_dir"] is not None:
             os.makedirs(config["output_dir"], exist_ok=True)
-    # decide weight precision
+    # decide weight precision for freezed models
     weight_dtype = torch.float32
     if accelerator.mixed_precision == "fp16":
         weight_dtype = torch.float16
@@ -547,15 +506,14 @@ def main():
 
     # # initialize condition extractors
     condition_extractors = {}
-    if config["apadapter"]:
-        melody_conditoner = melody_extractor().cuda().float()
-        condition_extractors["melody"] = melody_conditoner
-        dynamics_conditoner = dynamics_extractor().cuda().float()
-        condition_extractors["dynamics"] = dynamics_conditoner
-        rhythm_conditoner = rhythm_extractor().cuda().float()
-        condition_extractors["rhythm"] = rhythm_conditoner
-        for conditioner in condition_extractors.values():
-            conditioner.requires_grad_(True)
+    melody_conditoner = melody_extractor().cuda().float()
+    condition_extractors["melody"] = melody_conditoner
+    dynamics_conditoner = dynamics_extractor().cuda().float()
+    condition_extractors["dynamics"] = dynamics_conditoner
+    rhythm_conditoner = rhythm_extractor().cuda().float()
+    condition_extractors["rhythm"] = rhythm_conditoner
+    for conditioner in condition_extractors.values():
+        conditioner.requires_grad_(True)
 
     # load pretrained condition extractors
     for conditioner_type, ckpt_path in config["extractor_ckpt"].items():
@@ -571,7 +529,7 @@ def main():
     transformer.requires_grad_(False)
     projection_model.requires_grad_(False)
 
-    # Define a dictionary to map types to corresponding processor classes
+    # Define a dictionary to map types to corresponding processor classes, currently only "rotary" is available.
     processor_classes = {
         "rotary": StableAudioAttnProcessor2_0_rotary,
         "rotary_double": StableAudioAttnProcessor2_0_rotary_double,
@@ -579,58 +537,44 @@ def main():
     print(config["attn_processor_type"])
     # Get the processor classes based on the type
     attn_processor = processor_classes.get(config["attn_processor_type"], None)
-    if config["apadapter"]:
-        print("use apadapter")
-        attn_procs = {}
-        for name in transformer.attn_processors.keys():
-            if name.endswith("attn1.processor"):
-                attn_procs[name] = StableAudioAttnProcessor2_0()
-            else:
-                attn_procs[name] = attn_processor(
-                    layer_id = name.split(".")[1],
-                    hidden_size=768,
-                    name=name,
-                    cross_attention_dim=768,
-                    scale=1.0,
-                ).to("cuda", dtype=torch.float32)
+    attn_procs = {}
+    for name in transformer.attn_processors.keys():
+        if name.endswith("attn1.processor"):
+            attn_procs[name] = StableAudioAttnProcessor2_0()
+        else:
+            attn_procs[name] = attn_processor(
+                layer_id = name.split(".")[1],
+                hidden_size=768,
+                name=name,
+                cross_attention_dim=768,
+                scale=config['ap_scale'],
+            ).to("cuda", dtype=torch.float32)
+    # Load checkpoint
+    if config["transformer_ckpt"] is not None:
+        if "bin" in config["transformer_ckpt"]:
+            state_dict = torch.load(config["transformer_ckpt"])
+        elif "safetensors" in config["transformer_ckpt"]:
+            state_dict = load_file(config["transformer_ckpt"], device="cpu")
+        for name, processor in attn_procs.items():
+            if isinstance(processor, attn_processor):
+                weight_name_v = name + ".to_v_ip.weight"
+                weight_name_k = name + ".to_k_ip.weight"
+                conv_out_weight = name + ".conv_out.weight"
+                processor.to_v_ip.weight = torch.nn.Parameter(state_dict[weight_name_v].to(torch.float32))
+                processor.to_k_ip.weight = torch.nn.Parameter(state_dict[weight_name_k].to(torch.float32))
+                processor.conv_out.weight = torch.nn.Parameter(state_dict[conv_out_weight].to(torch.float32))
+                print(f"load {name}")
+    transformer.set_attn_processor(attn_procs)
+    class _Wrapper(AttnProcsLayers):
+        def forward(self, *args, **kwargs):
+            return pipeline.transformer(*args, **kwargs)
 
-        if config["transformer_ckpt"] is not None:
-            if "bin" in config["transformer_ckpt"]:
-                state_dict = torch.load(config["transformer_ckpt"])
-            elif "safetensors" in config["transformer_ckpt"]:
-                state_dict = load_file(config["transformer_ckpt"], device="cpu")
-            for name, processor in attn_procs.items():
-                if isinstance(processor, attn_processor):
-                    weight_name_v = name + ".to_v_ip.weight"
-                    weight_name_k = name + ".to_k_ip.weight"
-                    conv_out_weight = name + ".conv_out.weight"
-                    processor.to_v_ip.weight = torch.nn.Parameter(state_dict[weight_name_v].to(torch.float32))
-                    processor.to_k_ip.weight = torch.nn.Parameter(state_dict[weight_name_k].to(torch.float32))
-                    processor.conv_out.weight = torch.nn.Parameter(state_dict[conv_out_weight].to(torch.float32))
-                    param_sum = processor.conv_out.weight.sum()
-                    # print("param_sum", param_sum)
-                    print(f"load {name}")
-        transformer.set_attn_processor(attn_procs)
-        class _Wrapper(AttnProcsLayers):
-            def forward(self, *args, **kwargs):
-                return pipeline.transformer(*args, **kwargs)
-
-        transformer = _Wrapper(pipeline.transformer.attn_processors)
-    else:
-        transformer = pipeline.transformer
-
-
-
+    transformer = _Wrapper(pipeline.transformer.attn_processors)
     optimizer_class = torch.optim.AdamW
-    if config["apadapter"]:
-        params_to_optimize = itertools.chain(
-            transformer.parameters(),
-            *[model.parameters() for model in condition_extractors.values()]
-        )
-    else:
-        params_to_optimize = (
-            itertools.chain(transformer.parameters())
-        )
+    params_to_optimize = itertools.chain(
+        transformer.parameters(),
+        *[model.parameters() for model in condition_extractors.values()]
+    )
 
     optimizer = optimizer_class(
         params_to_optimize,
@@ -648,7 +592,7 @@ def main():
         device=accelerator.device,
         )
     val_size =  config["validation_num"]
-    train_size = len(dataset) - val_size  # Remaining 20% for validation
+    train_size = len(dataset) - val_size 
 
     # Ensure consistent splitting
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
@@ -672,7 +616,6 @@ def main():
         num_workers=config["dataloader_num_workers"],
         pin_memory=True,
     )
-    print(len(val_dataloader))
 
     # Scheduler and math around the number of training steps.
     overrode_max_train_steps = False
@@ -687,24 +630,18 @@ def main():
     )
 
     # Prepare everything with our `accelerator`.
-    if config["apadapter"]:
-        condition_extractor_values = list(condition_extractors.values())
+    condition_extractor_values = list(condition_extractors.values())
 
-        *condition_extractor_values, transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler = accelerator.prepare(
-            *condition_extractor_values, transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler
-        )
+    *condition_extractor_values, transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler = accelerator.prepare(
+        *condition_extractor_values, transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler
+    )
 
-    else:
-        transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler = accelerator.prepare(
-            transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler
-        )
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config["gradient_accumulation_steps"])
     if overrode_max_train_steps:
         config["max_train_steps"] = config["num_train_epochs"] * num_update_steps_per_epoch
     # Afterwards we recalculate our number of training epochs
     config["num_train_epochs"] = math.ceil(config["max_train_steps"] / num_update_steps_per_epoch)
 
-    # We need to initialize the trackers we use, and also store our configuration.
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
         accelerator.init_trackers(
@@ -716,14 +653,13 @@ def main():
                 }
             }
         )
-
     global_step = 0
     first_epoch = 0
     score_melody = 0
     # Only show the progress bar once on each machine.
     progress_bar = tqdm(range(global_step, config["max_train_steps"]), disable=not accelerator.is_local_main_process)
     progress_bar.set_description("Steps")
-    print("log_first", config["log_first"])
+    print("log_validation_first", config["log_first"])
     score_dynamics, score_melody, score_rhythm = 0, 0, 0
     if config["log_first"] and accelerator.is_main_process:
         score_dynamics, score_melody, score_rhythm = log_validation(val_dataloader,
@@ -734,11 +670,9 @@ def main():
     for epoch in range(first_epoch, config["num_train_epochs"]):
         for step, batch in enumerate(train_dataloader):
             transformer.train()
-            if config["apadapter"]:
-                for model in condition_extractors.values():
-                    model.train()
-            else:
-                condition_extractor_values = None
+            for model in condition_extractors.values():
+                model.train()
+
             with accelerator.accumulate(transformer, *condition_extractor_values if condition_extractor_values is not None else transformer):
                 # Convert audios to latent space
                 latents = batch["audio"]
@@ -749,7 +683,6 @@ def main():
                 alphas, sigmas = get_alphas_sigmas(t)  # get_alphas_sigmas should be defined as in the wrapper
                 alphas = alphas[:, None, None]  # Shape to match latents
                 sigmas = sigmas[:, None, None]
-
                 # Sample noise and add it to the latents
                 noise = torch.randn_like(latents)
                 noisy_latents = latents * alphas + noise * sigmas
@@ -759,24 +692,17 @@ def main():
                 else:
                     targets = noise  # For epsilon, the target is just the noise
                 prompt_texts = batch["prompt_texts"]
-                
-
                 dynamics_condition = batch["dynamics_condition"].unsqueeze(1)
                 extracted_dynamics_condition = condition_extractors["dynamics"](dynamics_condition.float())
                 rhythm_condition = batch["rhythm_condition"]
                 extracted_rhythm_condition = condition_extractors["rhythm"](rhythm_condition.float())
                 melody_condition = batch["melody_condition"]
                 extracted_melody_condition = condition_extractors["melody"](melody_condition.float())
-                # print("extracted_rhythm_condition", extracted_rhythm_condition.shape)
-                # print("extracted_dynamics_condition", extracted_dynamics_condition.shape)
-                # print("extracted_melody_condition", extracted_melody_condition.shape)
-                
                 desired_repeats = 192 // 64  # Number of repeats needed
                 extracted_audio_condition = latents.repeat_interleave(desired_repeats, dim=1)
                 extracted_rhythm_condition = F.interpolate(extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
                 extracted_dynamics_condition = F.interpolate(extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
                 extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
-                
                 for i in range(len(prompt_texts)):
                     rand_num = random.random()
                     num1, num2 = random.sample(range(1024), 2)
@@ -860,24 +786,10 @@ def main():
                 audio_duration_embeds = torch.cat([seconds_start_hidden_states, seconds_end_hidden_states], dim=2).float()
                 text_audio_duration_embeds = torch.cat(
                     [prompt_embeds, seconds_start_hidden_states, seconds_end_hidden_states], dim=1
-                )
-                num_waveforms_per_prompt = 1
-                # extracted_audio_condition[:,:,:] = 0
+                ) 
                 extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
-                # print("extracted_condition", extracted_condition.shape)               
                 extracted_condition = extracted_condition.transpose(1, 2)
-                bs_embed, seq_len, hidden_size = text_audio_duration_embeds.shape
-                # Duplicate audio_duration_embeds and text_audio_duration_embeds
-                text_audio_duration_embeds = text_audio_duration_embeds.repeat(1, num_waveforms_per_prompt, 1)
-                text_audio_duration_embeds = text_audio_duration_embeds.view(
-                    bs_embed * num_waveforms_per_prompt, seq_len, hidden_size
-                )
-
-                audio_duration_embeds = audio_duration_embeds.repeat(1, num_waveforms_per_prompt, 1)
-                audio_duration_embeds = audio_duration_embeds.view(
-                    bs_embed * num_waveforms_per_prompt, -1, audio_duration_embeds.shape[-1]
-                )
-
+                # This rotary_embedding is for self attention layers in Stable-audio 
                 rotary_embed_dim = pipeline.transformer.config.attention_head_dim // 2
                 rotary_embedding = get_1d_rotary_pos_embed(
                     rotary_embed_dim,
@@ -899,30 +811,13 @@ def main():
                     loss = F.mse_loss(model_pred.float(), targets.float(), reduction="mean")
                 # Backpropagation
                 accelerator.backward(loss)
-
                 if accelerator.sync_gradients:
-                    # print("clip here")
-                    if config["apadapter"]:
-                        params_to_clip = (
-                            itertools.chain(
-                                transformer.parameters(),
-                                *[model.parameters() for model in condition_extractors.values()]
-                            )
+                    params_to_clip = (
+                        itertools.chain(
+                            transformer.parameters(),
+                            *[model.parameters() for model in condition_extractors.values()]
                         )
-                    else:
-                        params_to_clip = (
-                            itertools.chain(transformer.parameters())
-                        )
-                    # for name, param in transformer.named_parameters():
-                    #     if param.grad is not None:
-                    #         print(f"Transformer Gradient: {name} -> {param.grad.dtype}")
-
-                    # if config["apadapter"]:
-                    #     for key, model in condition_extractors.items():
-                    #         for name, param in model.named_parameters():
-                    #             if param.grad is not None:
-                    #                 print(f"Condition Extractor Gradient [{key}]: {name} -> {param.grad.dtype}")
-
+                    )
                     accelerator.clip_grad_norm_(params_to_clip, 1.0)
                     optimizer.step()
                     lr_scheduler.step()
@@ -947,7 +842,7 @@ def main():
                             config["condition_type"],
                             pipeline, config, weight_dtype, global_step
                         )
-            logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0], "score_melody": score_melody, "score_dynamics": score_dynamics, "score_rhythm": score_rhythm, "time_spend": batch["collate_time_spend"], "getitem_time_mean": batch["getitem_time_mean"], "load_codec_time_mean": batch["load_codec_time_mean"], "load_condition_time_mean": batch["load_condition_time_mean"]}
+            logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0], "score_melody": score_melody, "score_dynamics": score_dynamics, "score_rhythm": score_rhythm}
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
 

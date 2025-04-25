@@ -5,7 +5,7 @@ def get_config():
         "meta_data_path": "./Qwen_caption.json",
         "audio_data_dir": "../mtg_full_47s",
         "audio_codec_root": "../mtg_full_47s_codec",
-        "output_dir": "./checkpoints/stable_audio_new_fast_all_v2",
+        "output_dir": "./checkpoints/stable_audio_new_fast_all_v3",
         "transformer_ckpt": "./checkpoints/110000_musical_attribute_checkpoint/model_3.safetensors",
         "extractor_ckpt": {
             "dynamics": "./checkpoints/110000_musical_attribute_checkpoint/model_1.safetensors",
@@ -13,8 +13,8 @@ def get_config():
             "rhythm": "./checkpoints/110000_musical_attribute_checkpoint/model_2.safetensors",
         },
         # training hyperparameters
-        "GPU_id" : "2",
-        "train_batch_size": 16,
+        "GPU_id" : "0",
+        "train_batch_size": 4,
         "learning_rate": 1e-4,
         "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
         "gradient_accumulation_steps": 8,
@@ -34,7 +34,7 @@ def get_config():
         "checkpointing_steps": 1000,
         "validation_steps": 500,
         "denoise_step": 50,
-        "log_first": True,
+        "log_first": False,
         "sigma_min": 0.3,
         "sigma_max": 500,
         "audio_pooling_rate": [1, 2, 4, 8]
