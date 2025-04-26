@@ -1,6 +1,5 @@
 import torch
 import soundfile as sf
-from pipeline.stable_audio_multi_cfg_pipe import StableAudioPipeline
 from diffusers.loaders import AttnProcsLayers
 from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0,
@@ -9,16 +8,15 @@ from MuseControlLite_attn_processor import (
 )
 import torch.nn as nn
 import torch.nn.functional as F
-from MuseControlLite_train_all import dynamics_extractor, rhythm_extractor, melody_extractor,  evaluate_f1_rhythm
+from MuseControlLite_train_all import dynamics_extractor, rhythm_extractor, melody_extractor
 from safetensors.torch import load_file  # Import safetensors
 import os
-import math
 import numpy as np
 import matplotlib.pyplot as plt
-from config_stable_audio_inference import get_config
+from config_inference import get_config
 import argparse
 import json
-from utils.extract_conditions import compute_melody, compute_dynamics, extract_melody_one_hot
+from utils.extract_conditions import compute_melody, compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
 from utils.stable_audio_dataset_utils import Stereo, PhaseFlipper
 from madmom.features.downbeats import DBNDownBeatTrackingProcessor,RNNDownBeatProcessor
 import random
@@ -94,11 +92,12 @@ def main(config):
         weight_dtype = torch.float16
     elif config["weight_dtype"] == "bp16":
         weight_dtype = torch.bfloat16
-    pipe = StableAudioPipeline.from_pretrained("stabilityai/stable-audio-open-1.0", torch_dtype=weight_dtype)
-    pipe.scheduler.config.sigma_max = config["sigma_max"]
-    pipe.scheduler.config.sigma_min = config["sigma_min"]
-    transformer = pipe.transformer
     if config["apadapter"]:
+        from pipeline.stable_audio_multi_cfg_pipe import StableAudioPipeline
+        pipe = StableAudioPipeline.from_pretrained("stabilityai/stable-audio-open-1.0", torch_dtype=weight_dtype)
+        pipe.scheduler.config.sigma_max = config["sigma_max"]
+        pipe.scheduler.config.sigma_min = config["sigma_min"]
+        transformer = pipe.transformer
         attn_procs = {}
         processor_classes = {
             "rotary": StableAudioAttnProcessor2_0_rotary,
@@ -136,7 +135,12 @@ def main(config):
             def forward(self, *args, **kwargs):
                 return pipe.transformer(*args, **kwargs)
         transformer = _Wrapper(pipe.transformer.attn_processors)
-    transformer.eval()
+    else:
+        from diffusers import StableAudioPipeline
+        pipe = StableAudioPipeline.from_pretrained("stabilityai/stable-audio-open-1.0", torch_dtype=weight_dtype)
+        pipe.scheduler.config.sigma_max = config["sigma_max"]
+        pipe.scheduler.config.sigma_min = config["sigma_min"]
+
     pipe = pipe.to("cuda")
     negative_text_prompt = config["negative_text_prompt"]
 
@@ -349,7 +353,7 @@ def main(config):
                     prompt=prompt_texts,
                     negative_prompt=negative_text_prompt,
                     num_inference_steps=config["denoise_step"],
-                    guidance_scale_text=config["guidance_scale_text"],
+                    guidance_scale=config["guidance_scale_text"],
                     num_waveforms_per_prompt=1,
                     audio_end_in_s=2097152/44100,
                     generator=generator,

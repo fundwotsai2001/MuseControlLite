@@ -39,9 +39,9 @@ from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0_rotary,
     StableAudioAttnProcessor2_0_rotary_double,
 )
-from utils.extract_conditions import compute_melody, compute_dynamics, extract_melody_one_hot
+from utils.extract_conditions import compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
 from sklearn.metrics import f1_score
-from config_stable_audio_training import get_config
+from config_training import get_config
 from torch.cuda.amp import autocast
 from madmom.features import RNNBeatProcessor, DBNBeatTrackingProcessor
 from madmom.features.downbeats import DBNDownBeatTrackingProcessor,RNNDownBeatProcessor
@@ -215,84 +215,6 @@ class rhythm_extractor(nn.Module):
         x = self.conv1d_5(x) # shape: (batchsize, 192, 750)
         return x
     
-def evaluate_f1_rhythm(input_timestamps, generated_timestamps, tolerance=0.07):
-    """
-    Evaluates precision, recall, and F1-score for beat/downbeat timestamp alignment.
-    
-    Args:
-        input_timestamps (ndarray): 2D array of shape [n, 2], where column 0 contains timestamps.
-        generated_timestamps (ndarray): 2D array of shape [m, 2], where column 0 contains timestamps.
-        tolerance (float): Alignment tolerance in seconds (default: 70ms).
-    
-    Returns:
-        tuple: (precision, recall, f1)
-    """
-    # Extract and sort timestamps
-    input_timestamps = np.asarray(input_timestamps)
-    generated_timestamps = np.asarray(generated_timestamps)
-    
-    # If you only need the first column
-    if input_timestamps.size > 0:  
-        input_timestamps = input_timestamps[:, 0]
-        input_timestamps.sort()
-    else:
-        input_timestamps = np.array([])
-        
-    if generated_timestamps.size > 0:
-        generated_timestamps = generated_timestamps[:, 0]
-        generated_timestamps.sort()
-    else:
-        generated_timestamps = np.array([])
-
-    # Handle empty cases
-    # Case 1: Both are empty
-    if len(input_timestamps) == 0 and len(generated_timestamps) == 0:
-        # You could argue everything is correct since there's nothing to detect,
-        # but returning all zeros is a common convention.
-        return 0.0, 0.0, 0.0
-
-    # Case 2: No ground-truth timestamps, but predictions exist
-    if len(input_timestamps) == 0 and len(generated_timestamps) > 0:
-        # All predictions are false positives => tp=0, fp = len(generated_timestamps)
-        # => precision=0, recall is undefined (tp+fn=0), typically we treat recall=0
-        return 0.0, 0.0, 0.0
-
-    # Case 3: Ground-truth timestamps exist, but no predictions
-    if len(input_timestamps) > 0 and len(generated_timestamps) == 0:
-        # Everything in input_timestamps is a false negative => tp=0, fn = len(input_timestamps)
-        # => recall=0, precision is undefined (tp+fp=0), typically we treat precision=0
-        return 0.0, 0.0, 0.0
-
-    # If we get here, both arrays are non-empty
-    tp = 0
-    fp = 0
-    
-    # Track matched ground-truth timestamps
-    matched_inputs = np.zeros(len(input_timestamps), dtype=bool)
-    
-    for gen_ts in generated_timestamps:
-        # Calculate absolute differences to each reference timestamp
-        diffs = np.abs(input_timestamps - gen_ts)
-        # Find index of the closest input timestamp
-        min_diff_idx = np.argmin(diffs)
-        
-        # Check if that difference is within tolerance and unmatched
-        if diffs[min_diff_idx] < tolerance and not matched_inputs[min_diff_idx]:
-            tp += 1
-            matched_inputs[min_diff_idx] = True
-        else:
-            fp += 1  # no suitable match found or closest was already matched
-    
-    # Remaining unmatched input timestamps are false negatives
-    fn = np.sum(~matched_inputs)
-    
-    # Compute precision, recall, f1
-    precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
-    recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
-    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
-    
-    return precision, recall, f1
-
 def log_validation(val_dataloader, condition_extractors, condition_type, pipeline, config, weight_dtype, global_step):
     val_audio_dir = os.path.join(config["output_dir"], "val_audio_{}".format(global_step))
     os.makedirs(val_audio_dir, exist_ok=True)

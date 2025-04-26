@@ -55,7 +55,7 @@ if __name__ == "__main__":
     os.makedirs(rhythm_dir, exist_ok=True)
     num_processes = min(cpu_count(), 20)  # Use up to 8 processes or the number of available CPUs
     with Pool(num_processes) as pool:
-        results = list(tqdm(pool.imap(process_item, range(len(meta[:10]))), total=len(meta)))
+        results = list(tqdm(pool.imap(process_item, range(len(meta))), total=len(meta)))
     # Update metadata
     for idx, dynamics_path, melody_path, rhythm_path in results:
         if dynamics_path:
