@@ -1,8 +1,8 @@
 def get_config():
     return {
-        "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["dynamics", "rhythm", "melody", "audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/melody_audio",
+        "output_dir": "./generated_audio/test",
 
         # Checkpoints (adapters and extractors)
 
@@ -20,7 +20,7 @@ def get_config():
 
         "attn_processor_type": "rotary", # Currently no other available.
 
-        "apadapter": False, # True for MuseControlLite, False for original Stable-audio
+        "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
         "ap_scale": 1.0, # recommend 1.0 for MuseControlLite, other values are not tested
 
@@ -30,9 +30,9 @@ def get_config():
         
         "denoise_step": 50,
 
-        "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
+        "sigma_min": 0.003, # sigma_min and sigma_max are for the scheduler.
 
-        "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
+        "sigma_max": 50,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
 
         "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
 
@@ -42,7 +42,7 @@ def get_config():
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
-        "use_audio_mask": False,
+        "use_audio_mask": True,
 
         "audio_mask_start_seconds": 24,
 
@@ -68,8 +68,8 @@ def get_config():
         ],
 
         "text": [
-                # "",
-                # "",
+                "",
+                "",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",
