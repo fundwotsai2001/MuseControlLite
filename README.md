@@ -5,8 +5,8 @@ This is the official implementation of MuseControlLite.
 ## Installation
 We provide a step by step series of examples that tell you how to get a development environment running.
 ```
-git clone https://github.com/fundwotsai2001/MuseControlLite_v2.git
-cd MuseControlLite_v2
+git clone https://github.com/fundwotsai2001/MuseControlLite.git
+cd MuseControlLite
 conda create -n stable-audio python=3.11
 conda activate stable-audio
 pip install -r requirements.txt
