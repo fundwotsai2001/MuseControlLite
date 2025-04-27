@@ -126,7 +126,10 @@ def log_validation(val_dataloader, condition_type, pipeline, config, weight_dtyp
         desired_repeats = 768 // 64  # Number of repeats needed
         extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1)
         masked_extracted_audio_condition = torch.full_like(extracted_audio_condition.to(torch.float32), fill_value=0)
-         
+        if step < 3:
+            extracted_audio_condition[:,:,512:] = 0
+        elif step < 6:
+            extracted_audio_condition[:,:,:512] = 0
         extracted_condition = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
         extracted_condition = extracted_condition.transpose(1, 2)
         generator = torch.Generator("cuda").manual_seed(0)
@@ -364,10 +367,6 @@ def main():
                 sigmas = sigmas[:, None, None]
                 # Sample noise and add it to the latents
                 noise = torch.randn_like(latents)
-                print("noise", noise.dtype)
-                print("sigmas", sigmas.dtype)
-                print("t", t.dtype)
-                print("alphas", alphas.dtype)
                 noisy_latents = latents * alphas + noise * sigmas
                 # Determine the target for v_prediction
                 if noise_scheduler.config.prediction_type == "v_prediction":
@@ -440,12 +439,6 @@ def main():
                     use_real=True,
                     repeat_interleave_real=False,
                 )              
-                # with accelerator.autocast():
-                print("latents", latents.dtype)
-                print("noisy_latents", noisy_latents.dtype)
-                print("text_audio_duration_embeds", text_audio_duration_embeds.dtype)
-                print("encoder_hidden_states", extracted_condition.dtype)
-                print("global_hidden_states", audio_duration_embeds.dtype)
                 with accelerator.autocast():
                     model_pred = pipeline.transformer(
                         noisy_latents,

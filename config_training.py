@@ -10,7 +10,7 @@ def get_config():
 
         "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/stable_audio_new_fast_audio",
+        "output_dir": "./checkpoints/stable_audio_new_fast_audio_v2",
 
         "transformer_ckpt": None,#"./checkpoints/checkpoint-40000/model_1.safetensors",
 
@@ -23,11 +23,11 @@ def get_config():
         "wand_run_name": "test",
 
         # training hyperparameters
-        "GPU_id" : "1",
+        "GPU_id" : "0",
 
-        "train_batch_size": 4,
+        "train_batch_size": 16,
 
-        "learning_rate": 5e-5,
+        "learning_rate": 1e-4,
 
         "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
 
@@ -56,15 +56,15 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
 
-        "checkpointing_steps": 1000,
+        "checkpointing_steps": 500,
 
         "validation_steps": 500,
 
         "denoise_step": 50,
 
-        "log_first": False,
+        "log_first": True,
 
         "sigma_min": 0.3,
 
