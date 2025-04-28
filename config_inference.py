@@ -1,22 +1,30 @@
 def get_config():
     return {
-        "condition_type": ["dynamics", "rhythm", "melody", "audio"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
         "output_dir": "./generated_audio/test",
 
-        # Checkpoints (adapters and extractors)
-
+        # Checkpoints (adapters and extractors): You can choose any combinations you like. 
         ###############
-        "transformer_ckpt": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model_3.safetensors",
-
+        "transformer_ckpt": "./checkpoints/110000_musical_44000_audio/model_3.safetensors",
+        
         "extractor_ckpt": {
-            "dynamics": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model_1.safetensors",
-            "melody": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model.safetensors",
-            "rhythm": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model_2.safetensors",
+            "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
+            "melody": "./checkpoints/110000_musical_44000_audio/model.safetensors",
+            "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
         ###############
 
-        "GPU_id": "0",
+        # Checkpoints (adapters and extractors): For melody only.
+        ###############
+        "transformer_ckpt_melody": "./checkpoints/melody-40000/model_1.safetensors",
+
+        "extractor_ckpt_melody": {
+            "melody": "./checkpoints/melody-40000/model.safetensors",
+        },
+        ###############
+
+        "GPU_id": "1",
 
         "attn_processor_type": "rotary", # Currently no other available.
 
@@ -42,7 +50,7 @@ def get_config():
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
-        "use_audio_mask": True,
+        "use_audio_mask": False,
 
         "audio_mask_start_seconds": 24,
 
@@ -68,8 +76,8 @@ def get_config():
         ],
 
         "text": [
-                "",
-                "",
+                # "",
+                # "",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",

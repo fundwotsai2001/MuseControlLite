@@ -5,11 +5,14 @@ This is the official implementation of MuseControlLite.
 ## Installation
 We provide a step by step series of examples that tell you how to get a development environment running.
 ```
-git clone https://github.com/fundwotsai2001/MuseControlLite.git
-cd MuseControlLite
+git clone https://github.com/fundwotsai2001/MuseControlLite_v2.git
+cd MuseControlLite_v2
+## Install environment
 conda create -n stable-audio python=3.11
 conda activate stable-audio
 pip install -r requirements.txt
+## Install checkpoint
+gdown 1Q9B333jcq1czA11JKTbM-DHANJ8YqGbP --folder
 ```
 
 ## Inference
@@ -26,7 +29,10 @@ We use [Jamendo](https://github.com/MTG/mtg-jamendo-dataset), we will provide th
 4. Use `Qwen/Qwen2-Audio-7B-Instruct` to obtain all captions for the audio.
 5. Filter out audios that appear in the no vocal Song Describer Dataset.
 
+
 You can use the pipeline for other audio datasets as well.
+### VAE extraction
+
 ### Condition extraction
 Prepare text-audio pair with a list of dictionaries as below:
 ```
