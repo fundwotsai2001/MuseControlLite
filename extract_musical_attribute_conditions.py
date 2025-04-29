@@ -6,6 +6,7 @@ from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
 from madmom.features.downbeats import RNNDownBeatProcessor
 import torchaudio
+import argparse
 
 # This file is for preparing the musical attribute condition
 # Function to process each item
@@ -39,9 +40,15 @@ def process_item(idx):
 # Multi-processing
 if __name__ == "__main__":
     # Paths
-    meta_path = "./Qwen_caption.json" # This is a json file that contains a list of dictionaries, there are two keys in the dictionary: "path" and "Qwen_caption"
-    data_base_path = "../mtg_full_47s" # audio data root
-    new_json = "./test_condition.json" # The json file same as meta_path, but added the condition paths
+    parser = argparse.ArgumentParser(description="Stable-audio VAE encode")
+    parser.add_argument("--audio_folder", type=str, default="../mtg_full_47s", help="The audio folder path")
+    parser.add_argument("--meta_path", type=str, default="./Qwen_caption.json", help="A list with dictionaries save in a json file")
+    parser.add_argument("--new_json", type=str, default="./test_condition.json", help="json file with conditions")
+    args = parser.parse_args()  # Parse the arguments
+
+    meta_path = args.meta_path # This is a json file that contains a list of dictionaries, there are two keys in the dictionary: "path" and "Qwen_caption"
+    data_base_path = args.audio_folder # audio data root
+    new_json = args.new_json # The json file same as meta_path, but added the condition paths
     dynamics_dir = "./dynamics_condition_dir"
     melody_dir = "./melody_condition_dir"
     rhythm_dir = "./rhythm_condition_dir"
