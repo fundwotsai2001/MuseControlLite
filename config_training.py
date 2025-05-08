@@ -2,36 +2,36 @@ def get_config():
     return {
         # Load files and checkpoints
 
-        "condition_type": ["audio"], #"melody", "rhythm", "dynamics", "audio"
+        "condition_type": ["melody"], #"melody", "rhythm", "dynamics", "audio"
 
-        "meta_data_path": "./Qwen_caption.json",
+        "meta_data_path": "./ALL_condition_wo_SDD.json",
 
         "audio_data_dir": "../mtg_full_47s",
 
         "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/stable_audio_new_fast_audio",
+        "output_dir": "./checkpoints/stable_audio_melody_wo_SDD",
 
-        "transformer_ckpt": None,#"./checkpoints/checkpoint-40000/model_1.safetensors",
+        "transformer_ckpt": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model_1.safetensors",
 
         "extractor_ckpt": {
             # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
-            # "melody": "./checkpoints/checkpoint-40000/model.safetensors",
+            "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model.safetensors",
             # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
 
         "wand_run_name": "test",
 
         # training hyperparameters
-        "GPU_id" : "1",
+        "GPU_id" : "2",
 
-        "train_batch_size": 4,
+        "train_batch_size": 16,
 
         "learning_rate": 5e-5,
 
         "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
 
-        "gradient_accumulation_steps": 16,
+        "gradient_accumulation_steps": 4,
 
         "max_train_steps": 200000,
 
@@ -64,11 +64,9 @@ def get_config():
 
         "denoise_step": 50,
 
-        "log_first": False,
+        "log_first": True,
 
         "sigma_min": 0.3,
 
         "sigma_max": 500,
-        
-        "audio_pooling_rate": [1, 2, 4, 8]
     }

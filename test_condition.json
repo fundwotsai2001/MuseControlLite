@@ -1,0 +1,72 @@
+[
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"(Me_up_at_does)\"_by_E._E._Cummings_Lezet_Characters_slice_1.mp3",
+        "Qwen_caption": "The music is an instrumental with a techno beat, featuring electronic sounds. It falls under the genres of blues, improvisation, instrumental pop, jazz, pop, and rock. The mood evoked is cool. The time signature is 4/4 with a tempo of 93.8 bpm. It could be used in the soundtrack of a sit-com or a cartoon.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"(Me_up_at_does)\"_by_E._E._Cummings_Lezet_Characters_slice_1.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"(Me_up_at_does)\"_by_E._E._Cummings_Lezet_Characters_slice_1.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"(Me_up_at_does)\"_by_E._E._Cummings_Lezet_Characters_slice_1.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Dos_cuerpos\"_de_Octavio_Paz_Lezet_Characters_slice_3.mp3",
+        "Qwen_caption": "The music piece is an instrumental with a prominent guitar sound, belonging to the experimental and ambient genres. It creates a dark and suspenseful mood through its composition. The time signature is 4/4 and the tempo is 92.3 bpm, indicating a steady and structured rhythmic pattern typical of many music compositions. This piece could be effectively used in a film or video game where there's tension and intrigue, such as a scene involving a character sneaking around or discovering something unexpected.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Dos_cuerpos\"_de_Octavio_Paz_Lezet_Characters_slice_3.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Dos_cuerpos\"_de_Octavio_Paz_Lezet_Characters_slice_3.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Dos_cuerpos\"_de_Octavio_Paz_Lezet_Characters_slice_3.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"John_Coltrane\"_by_James_A._Emanuel_Lezet_Characters_slice_1.mp3",
+        "Qwen_caption": "The music segment is an instrumental piece identified with the electronic and techno genres. It sets a moody ambiance, likely intended to evoke a certain emotional response from listeners. The rhythm follows a steady beat, characteristic of many dance music genres, suggesting it could be suitable for settings that require a rhythmic background such as dance clubs or fitness classes. Given its electronic and techno characteristics, it's also conceivable that this piece could be used in sci-fi or futuristic-themed productions due to its potentially atmospheric and synthetic soundscape.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"John_Coltrane\"_by_James_A._Emanuel_Lezet_Characters_slice_1.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"John_Coltrane\"_by_James_A._Emanuel_Lezet_Characters_slice_1.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"John_Coltrane\"_by_James_A._Emanuel_Lezet_Characters_slice_1.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Cleanse_Bath\"_10\"_Metal_Laquer_Nautical_Almanac_Handcut_Record_Transfers_slice_1.mp3",
+        "Qwen_caption": "The music piece is an experimental electronic track with ambient noise influences, set in Bb minor key at a tempo of around 89 BPM. It features a 4/4 time signature and a chord progression that includes A# major, C major, and F major. The mood evoked is one of intensity and unease, suitable for a film or game soundtrack during intense scenes.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cleanse_Bath\"_10\"_Metal_Laquer_Nautical_Almanac_Handcut_Record_Transfers_slice_1.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cleanse_Bath\"_10\"_Metal_Laquer_Nautical_Almanac_Handcut_Record_Transfers_slice_1.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cleanse_Bath\"_10\"_Metal_Laquer_Nautical_Almanac_Handcut_Record_Transfers_slice_1.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Karawane\"_by_Hugo_Ball_Lezet_Characters_slice_3.mp3",
+        "Qwen_caption": "The music piece is an instrumental with a blend of electronic and rock genres, set in A minor key with a tempo of around 95 BPM. It presents a unique time signature, featuring a 4/4 pattern with unexpected chord changes including transitions to C major, D major, and F major. The mood evoked is moody yet upbeat, suitable for a soundtrack or dramatic scene in a movie or game.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Karawane\"_by_Hugo_Ball_Lezet_Characters_slice_3.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Karawane\"_by_Hugo_Ball_Lezet_Characters_slice_3.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Karawane\"_by_Hugo_Ball_Lezet_Characters_slice_3.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Experimental_Bass_Jamm_2_@_Gallery_724_(Allentown,_PA)_1-29-2017_Jared_C._Balogh_@_Gallery_724_slice_5.mp3",
+        "Qwen_caption": "The instrumental piece is a blend of electronic and rock genres, set in B minor with a tempo of around 145 BPM. It presents a 4/4 time signature and features a recurring pattern of G major and A major chords. The mood evoked is one of tension and unease, suitable for a dramatic movie scene involving a car chase.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Experimental_Bass_Jamm_2_@_Gallery_724_(Allentown,_PA)_1-29-2017_Jared_C._Balogh_@_Gallery_724_slice_5.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Experimental_Bass_Jamm_2_@_Gallery_724_(Allentown,_PA)_1-29-2017_Jared_C._Balogh_@_Gallery_724_slice_5.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Experimental_Bass_Jamm_2_@_Gallery_724_(Allentown,_PA)_1-29-2017_Jared_C._Balogh_@_Gallery_724_slice_5.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_2.mp3",
+        "Qwen_caption": "The music piece is an instrumental rendition featuring acoustic guitar, tabla, and sitar, blending elements of folk, indie, and world music genres. The mood evoked is one of tranquility with a hint of cultural richness, suitable for a serene setting such as a tea house or during a meditation session. The rhythmic pattern follows a 4/4 time signature, providing a steady and comforting tempo to the composition.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_2.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_2.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_2.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_5.mp3",
+        "Qwen_caption": "The music piece is an instrumental blend of folk and medieval genres, set in G major with a tempo of 105.3 BPM. It follows a 4/4 time signature and features a rich chord progression. The melody is carried by acoustic guitar and piano, creating a soothing yet lively atmosphere. The music could be fitting for a historical drama movie during scenes depicting a countryside village setting or a character reflecting on past events while walking through a serene forest.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_5.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_5.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_5.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Cigarren\"_by_Kurt_Schwitters_Lezet_Characters_slice_1.mp3",
+        "Qwen_caption": "The instrumental piece is categorized under the genres experimental, noise, and improv, evoking an intriguing mood through its use of synthesizer sounds. The composition employs a 4/4 time signature with a tempo of 89.6 bpm, presenting a steady rhythm that enhances the peculiar atmosphere it creates. It's suitable for scenarios that require an unconventional musical backdrop, such as in art installations or avant-garde performances.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cigarren\"_by_Kurt_Schwitters_Lezet_Characters_slice_1.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cigarren\"_by_Kurt_Schwitters_Lezet_Characters_slice_1.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cigarren\"_by_Kurt_Schwitters_Lezet_Characters_slice_1.npy"
+    },
+    {
+        "path": "/home/b06611012/fundwotsai/FMA_audio_47s/\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_4.mp3",
+        "Qwen_caption": "The music piece is an instrumental blend of folk and medieval genres, set in G major with a tempo of 120 BPM. It follows a 4/4 time signature and features a rich chord progression with prominent guitar and harp elements. The overall mood evokes a sense of narrative and storytelling typical of medieval music, creating an immersive atmosphere suitable for historical or fantasy settings.",
+        "dynamics_path": "./dynamics_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_4.npy",
+        "melody_path": "./melody_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_4.npy",
+        "rhythm_path": "./rhythm_condition_dir/_home_b06611012_fundwotsai_FMA_audio_47s_\"Cante\"_do_Monte_do_Galaz_Alexandre_Bateiras_Can\u00e7\u00f5es_da_Lua_Nova_slice_4.npy"
+    }
+]
