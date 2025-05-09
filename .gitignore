@@ -3,3 +3,9 @@ wandb
 __pycache__
 generated_audio
 not_using
+*.json
+testing
+SDD_audio
+SDD_dynamics_condition_dir
+SDD_melody_condition_dir
+SDD_rhythm_condition_dir

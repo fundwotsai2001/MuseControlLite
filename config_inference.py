@@ -1,22 +1,34 @@
 def get_config():
     return {
-        "condition_type": ["dynamics", "rhythm", "melody", "audio"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/test",
+        "output_dir": "./generated_audio/melody_SDD",
 
-        # Checkpoints (adapters and extractors)
+        "meta_data_path": "./SDD_nosinging_full_conditions.json",
 
+        "audio_data_dir": "./SDD_audio",
+
+        # Checkpoints (adapters and extractors): You can choose any combinations you like. 
         ###############
-        "transformer_ckpt": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model_3.safetensors",
-
+        "transformer_ckpt": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-40000/model_1.safetensors",
+        
         "extractor_ckpt": {
-            "dynamics": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model_1.safetensors",
-            "melody": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model.safetensors",
-            "rhythm": "./checkpoints/stable_audio_new_fast_all_v2/checkpoint-44000/model_2.safetensors",
+            # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
+            "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-40000/model.safetensors",
+            # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
         ###############
 
-        "GPU_id": "0",
+        # Checkpoints (adapters and extractors): For melody only.
+        ###############
+        "transformer_ckpt_melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-40000/model_1.safetensors",
+
+        "extractor_ckpt_melody": {
+            "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-40000/model.safetensors",
+        },
+        ###############
+
+        "GPU_id": "2",
 
         "attn_processor_type": "rotary", # Currently no other available.
 
@@ -26,23 +38,23 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.5, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
         "denoise_step": 50,
 
-        "sigma_min": 0.003, # sigma_min and sigma_max are for the scheduler.
+        "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
 
-        "sigma_max": 50,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
+        "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
 
         "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
 
-        "negative_text_prompt": "",
+        "negative_text_prompt": [""],
 
         # The below two mask should complementary, which means every time slice shouldn't receive both audio and music attribute condition.
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
-        "use_audio_mask": True,
+        "use_audio_mask": False,
 
         "audio_mask_start_seconds": 24,
 
@@ -68,8 +80,8 @@ def get_config():
         ],
 
         "text": [
-                "",
-                "",
+                # "",
+                # "",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",
