@@ -4,6 +4,7 @@ __pycache__
 generated_audio
 not_using
 *.json
+*.csv
 testing
 SDD_audio
 SDD_dynamics_condition_dir
