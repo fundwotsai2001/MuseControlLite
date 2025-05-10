@@ -58,7 +58,7 @@ class AudioInversionDataset(Dataset):
         # Load numpy arrays concurrently
         def load_npy(path):
             return np.load(path) 
-        melody_path = build_path("/home/b06611012/fundwotsai/MuseControlLite_v2/SDD_melody_condition_dir", audio_path)
+        melody_path = build_path("./SDD_melody_condition_dir", audio_path)
         melody_curve = load_npy(melody_path)
         
         # Load audio tokens, they are encoded with the Stable-audio VAE and saved, skipping the the VAE encoding process saves memory when training MuseControlLite
@@ -126,7 +126,7 @@ def main(config):
                 state_dict = load_file(ckpt_path, device="cpu")
             condition_extractors[conditioner_type].load_state_dict(state_dict)
             print(f"load checkpoint from {config['extractor_ckpt_melody']} successfully !")
-    output_dir = config["output_dir"] + f"text_{config['guidance_scale_text']}_con_{config['guidance_scale_con']}_{'_'.join(config['condition_type'])}_{config['sigma_min']}_{config['sigma_max']}"
+    output_dir = config["output_dir"] + f"text_{config['guidance_scale_text']}_con_{config['guidance_scale_con']}_{'_'.join(config['condition_type'])}_{config['sigma_min']}_{config['sigma_max']}_step{config['denoise_step']}"
     os.makedirs(output_dir, exist_ok=True)
     weight_dtype = torch.float32
     if config["weight_dtype"] == "fp16":
