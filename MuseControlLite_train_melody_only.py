@@ -38,13 +38,12 @@ from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0,
     StableAudioAttnProcessor2_0_rotary,
     StableAudioAttnProcessor2_0_rotary_double,
+    StableAudioAttnProcessor2_0_no_rotary,
 )
 from utils.extract_conditions import compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
 from sklearn.metrics import f1_score
 from config_training import get_config
-from torch.cuda.amp import autocast
-from madmom.features import RNNBeatProcessor, DBNBeatTrackingProcessor
-from madmom.features.downbeats import DBNDownBeatTrackingProcessor,RNNDownBeatProcessor
+
 ### same way as stable audio loads audio file
 import gc
 torchaudio.set_audio_backend("sox_io")
@@ -313,6 +312,7 @@ def main():
     processor_classes = {
         "rotary": StableAudioAttnProcessor2_0_rotary,
         "rotary_double": StableAudioAttnProcessor2_0_rotary_double,
+        "no_rotary": StableAudioAttnProcessor2_0_no_rotary,
     }
     print(config["attn_processor_type"])
     # Get the processor classes based on the type
@@ -410,7 +410,7 @@ def main():
         num_warmup_steps = 500,
         num_training_steps = config['max_train_steps'],
         num_cycles = 1,
-        power = 1.0,
+        power = 0.5,
         last_epoch = -1,
     )
 
@@ -430,7 +430,7 @@ def main():
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
         accelerator.init_trackers(
-            project_name="MuseControlLite",      # your W&B project
+            project_name="MuseControlLite_ablation",      # your W&B project
             config=config,                        # whatever hyperparams you’re logging
             init_kwargs={
                 "wandb": {
@@ -489,7 +489,7 @@ def main():
                         ## all blank
                         prompt_texts[i] = ""
                         extracted_melody_condition[i] = torch.zeros_like(extracted_melody_condition[i])
-                    elif rand_num < 0.55:
+                    elif rand_num < 0.35:
                         ## 0~num1 : melody, rhythm, dynamics or blank
                         ## num1~num2 : audio or blank
                         ## num2~1024: melody, rhythm, dynamics or blank
@@ -499,7 +499,7 @@ def main():
                             extracted_melody_condition[i][:, num1 : num2] = 0
                         else:
                             extracted_melody_condition[i][:,:] = 0
-                    else:
+                    elif rand_num < 0.6:
                         ## 0~num1 : audio or blank
                         ## num1~num2 : melody, rhythm, dynamics or blank
                         ## num2~1024: audio or blank
