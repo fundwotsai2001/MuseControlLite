@@ -39,6 +39,7 @@ from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0_rotary,
     StableAudioAttnProcessor2_0_rotary_double,
     StableAudioAttnProcessor2_0_no_rotary,
+    StableAudioAttnProcessor2_0_rotary_no_cnn,
 )
 from utils.extract_conditions import compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
 from sklearn.metrics import f1_score
@@ -313,6 +314,7 @@ def main():
         "rotary": StableAudioAttnProcessor2_0_rotary,
         "rotary_double": StableAudioAttnProcessor2_0_rotary_double,
         "no_rotary": StableAudioAttnProcessor2_0_no_rotary,
+        "no_cnn": StableAudioAttnProcessor2_0_rotary_no_cnn,
     }
     print(config["attn_processor_type"])
     # Get the processor classes based on the type
@@ -430,7 +432,7 @@ def main():
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
         accelerator.init_trackers(
-            project_name="MuseControlLite_ablation",      # your W&B project
+            project_name="MuseControlLite_ablation_v2",      # your W&B project
             config=config,                        # whatever hyperparams you’re logging
             init_kwargs={
                 "wandb": {
@@ -566,8 +568,8 @@ def main():
                     optimizer.step()
                     lr_scheduler.step()
                     optimizer.zero_grad()
-                    gc.collect()
-                    torch.cuda.empty_cache()
+                    # gc.collect()
+                    # torch.cuda.empty_cache()
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
                 audios = []

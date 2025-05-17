@@ -648,3 +648,150 @@ class StableAudioAttnProcessor2_0_no_rotary(torch.nn.Module):
         hidden_states = hidden_states / attn.rescale_output_factor
 
         return hidden_states
+class StableAudioAttnProcessor2_0_rotary_no_cnn(torch.nn.Module):
+    r"""
+    Processor for implementing scaled dot-product attention (enabled by default if you're using PyTorch 2.0). This is
+    used in the Stable Audio model. It applies rotary embedding on query and key vector, and allows MHA, GQA or MQA.
+    """
+    def __init__(self, layer_id, hidden_size, name, cross_attention_dim=None, num_tokens=4, scale=1.0):
+        if not hasattr(F, "scaled_dot_product_attention"):
+            raise ImportError(
+                "StableAudioAttnProcessor2_0 requires PyTorch 2.0, to use it, please upgrade PyTorch to 2.0."
+            )
+        super().__init__()
+        from transformers.models.llama.modeling_llama import LlamaRotaryEmbedding
+        self.layer_id = layer_id
+        self.hidden_size = hidden_size
+        self.cross_attention_dim = cross_attention_dim
+        self.num_tokens = num_tokens
+        self.scale = scale
+        self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+        self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+        self.name = name
+        # self.conv_out = zero_module(nn.Conv1d(1536,1536,kernel_size=1, padding=0, bias=False))     
+        self.rotary_emb = LlamaRotaryEmbedding(dim = 64)
+        self.to_k_ip.weight.requires_grad = True
+        self.to_v_ip.weight.requires_grad = True
+        # self.conv_out.weight.requires_grad = True
+    def rotate_half(self, x):
+        x = x.view(*x.shape[:-1], x.shape[-1] // 2, 2)
+        x1, x2 = x.unbind(-1)
+        return torch.cat((-x2, x1), dim=-1)
+
+
+    def __call__(
+        self,
+        attn,
+        hidden_states: torch.Tensor,
+        encoder_hidden_states: Optional[torch.Tensor] = None,
+        encoder_hidden_states_con: Optional[torch.Tensor] = None,
+        encoder_hidden_states_audio: Optional[torch.Tensor] = None,
+        attention_mask: Optional[torch.Tensor] = None,
+        rotary_emb: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        from diffusers.models.embeddings import apply_rotary_emb
+
+        residual = hidden_states
+
+        input_ndim = hidden_states.ndim
+
+        if input_ndim == 4:
+            batch_size, channel, height, width = hidden_states.shape
+            hidden_states = hidden_states.view(batch_size, channel, height * width).transpose(1, 2)
+
+        batch_size, sequence_length, _ = (
+            hidden_states.shape if encoder_hidden_states is None else encoder_hidden_states.shape
+        )
+        if attention_mask is not None:
+            attention_mask = attn.prepare_attention_mask(attention_mask, sequence_length, batch_size)
+            # scaled_dot_product_attention expects attention_mask shape to be
+            # (batch, heads, source_length, target_length)
+            attention_mask = attention_mask.view(batch_size, attn.heads, -1, attention_mask.shape[-1])
+
+        # The original cross attention in Stable-audio
+        ###############################################################
+        query = attn.to_q(hidden_states)
+        ip_hidden_states = encoder_hidden_states_con
+        key = attn.to_k(encoder_hidden_states)
+        value = attn.to_v(encoder_hidden_states)
+        head_dim = query.shape[-1] // attn.heads
+        kv_heads = key.shape[-1] // head_dim
+        query = query.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
+        key = key.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
+        value = value.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
+
+        if kv_heads != attn.heads:
+            # if GQA or MQA, repeat the key/value heads to reach the number of query heads.
+            heads_per_kv_head = attn.heads // kv_heads
+            key = torch.repeat_interleave(key, heads_per_kv_head, dim=1)
+            value = torch.repeat_interleave(value, heads_per_kv_head, dim=1)
+        if attn.norm_q is not None:
+            query = attn.norm_q(query)
+        if attn.norm_k is not None:
+            key = attn.norm_k(key)
+        # TODO: add support for attn.scale when we move to Torch 2.1
+        hidden_states = F.scaled_dot_product_attention(
+            query, key, value, attn_mask=attention_mask, dropout_p=0.0, is_causal=False
+        )
+        hidden_states = hidden_states.transpose(1, 2).reshape(batch_size, -1, attn.heads * head_dim)
+        hidden_states = hidden_states.to(query.dtype)
+        ###############################################################
+
+
+        # The decupled cross attention in used in MuseControlLite, to deal with additional conditions
+        ###############################################################
+        ip_key = self.to_k_ip(ip_hidden_states)
+        ip_value = self.to_v_ip(ip_hidden_states)
+        ip_key = ip_key.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
+        ip_key_length = ip_key.shape[2]
+        ip_value = ip_value.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
+        if kv_heads != attn.heads:
+            # if GQA or MQA, repeat the key/value heads to reach the number of query heads.
+            heads_per_kv_head = attn.heads // kv_heads
+            ip_key = torch.repeat_interleave(ip_key, heads_per_kv_head, dim=1)
+            ip_value = torch.repeat_interleave(ip_value, heads_per_kv_head, dim=1)
+        ip_value_length = ip_value.shape[2]
+        seq_len_query = query.shape[2]
+
+        # Generate position_ids for query, keys, values
+        position_ids_query = torch.arange(seq_len_query, dtype=torch.long, device=query.device) * (ip_key_length / seq_len_query)
+        position_ids_query = position_ids_query.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_query]
+        position_ids_key = torch.arange(ip_key_length, dtype=torch.long, device=key.device)
+        position_ids_key = position_ids_key.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_key]
+        position_ids_value = torch.arange(ip_value_length, dtype=torch.long, device=value.device)
+        position_ids_value = position_ids_value.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_key]
+        
+        # Rotate query, keys, values 
+        cos, sin = self.rotary_emb(query, position_ids_query)
+        query_pos = (query * cos.unsqueeze(1)) + (self.rotate_half(query) * sin.unsqueeze(1))
+        cos, sin = self.rotary_emb(ip_key, position_ids_key)
+        ip_key = (ip_key * cos.unsqueeze(1)) + (self.rotate_half(ip_key) * sin.unsqueeze(1))
+        cos, sin = self.rotary_emb(ip_value, position_ids_value)
+        ip_value = (ip_value * cos.unsqueeze(1)) + (self.rotate_half(ip_value) * sin.unsqueeze(1))
+        
+        ip_hidden_states = F.scaled_dot_product_attention(
+                query_pos, ip_key, ip_value, attn_mask=None, dropout_p=0.0, is_causal=False
+            )
+        ip_hidden_states = ip_hidden_states.transpose(1, 2).reshape(batch_size, -1, attn.heads * head_dim)
+        ip_hidden_states = ip_hidden_states.to(query.dtype)
+        # ip_hidden_states = ip_hidden_states.transpose(1, 2)
+        # ip_hidden_states = self.conv_out(ip_hidden_states)
+        # ip_hidden_states = ip_hidden_states.transpose(1, 2)
+        ###############################################################
+
+        # Combine the output of the two cross-attention layers
+        hidden_states = hidden_states + self.scale * ip_hidden_states
+        # linear proj
+        hidden_states = attn.to_out[0](hidden_states)
+        # dropout
+        hidden_states = attn.to_out[1](hidden_states)
+
+        if input_ndim == 4:
+            hidden_states = hidden_states.transpose(-1, -2).reshape(batch_size, channel, height, width)
+
+        if attn.residual_connection:
+            hidden_states = hidden_states + residual
+
+        hidden_states = hidden_states / attn.rescale_output_factor
+
+        return hidden_states
