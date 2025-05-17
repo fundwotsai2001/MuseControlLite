@@ -648,7 +648,7 @@ class StableAudioAttnProcessor2_0_no_rotary(torch.nn.Module):
         hidden_states = hidden_states / attn.rescale_output_factor
 
         return hidden_states
-class StableAudioAttnProcessor2_0_rotary_no_cnn(torch.nn.Module):
+class StableAudioAttnProcessor2_0_rotary_attnhead_scale_up(torch.nn.Module):
     r"""
     Processor for implementing scaled dot-product attention (enabled by default if you're using PyTorch 2.0). This is
     used in the Stable Audio model. It applies rotary embedding on query and key vector, and allows MHA, GQA or MQA.
@@ -668,11 +668,11 @@ class StableAudioAttnProcessor2_0_rotary_no_cnn(torch.nn.Module):
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.name = name
-        # self.conv_out = zero_module(nn.Conv1d(1536,1536,kernel_size=1, padding=0, bias=False))     
+        self.conv_out = zero_module(nn.Conv1d(1536,1536,kernel_size=1, padding=0, bias=False))     
         self.rotary_emb = LlamaRotaryEmbedding(dim = 64)
         self.to_k_ip.weight.requires_grad = True
         self.to_v_ip.weight.requires_grad = True
-        # self.conv_out.weight.requires_grad = True
+        self.conv_out.weight.requires_grad = True
     def rotate_half(self, x):
         x = x.view(*x.shape[:-1], x.shape[-1] // 2, 2)
         x1, x2 = x.unbind(-1)
@@ -774,9 +774,9 @@ class StableAudioAttnProcessor2_0_rotary_no_cnn(torch.nn.Module):
             )
         ip_hidden_states = ip_hidden_states.transpose(1, 2).reshape(batch_size, -1, attn.heads * head_dim)
         ip_hidden_states = ip_hidden_states.to(query.dtype)
-        # ip_hidden_states = ip_hidden_states.transpose(1, 2)
-        # ip_hidden_states = self.conv_out(ip_hidden_states)
-        # ip_hidden_states = ip_hidden_states.transpose(1, 2)
+        ip_hidden_states = ip_hidden_states.transpose(1, 2)
+        ip_hidden_states = self.conv_out(ip_hidden_states)
+        ip_hidden_states = ip_hidden_states.transpose(1, 2)
         ###############################################################
 
         # Combine the output of the two cross-attention layers
