@@ -164,7 +164,7 @@ class melody_extractor_full(nn.Module):
         x = F.silu(x)
         x = self.conv1d_5(x) # shape: (batchsize, 768, 1024)
         return x
-def log_validation(val_dataloader, condition_extractors, condition_type, pipeline, config, weight_dtype, global_step):
+def log_validation(val_dataloader, condition_type, pipeline, config, weight_dtype, global_step):
     val_audio_dir = os.path.join(config["output_dir"], "val_audio_{}".format(global_step))
     os.makedirs(val_audio_dir, exist_ok=True)
     score_dynamics = []
@@ -178,10 +178,14 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
         melody_condition = batch["melody_condition"]
         audio_full_path = batch["audio_full_path"]
         ### conditioned
-        extracted_melody_condition = condition_extractors["melody"](melody_condition.to(torch.float32))        
+        desired_repeats = 768 // 128  # Number of repeats needed
+        extracted_melody_condition = melody_condition.repeat_interleave(desired_repeats, dim=1)
+        print("extracted_melody_condition", extracted_melody_condition.shape)
+        # extracted_melody_condition = condition_extractors["melody"](melody_condition.to(torch.float32))        
         masked_extracted_melody_condition = torch.full_like(extracted_melody_condition.to(torch.float32), fill_value=0)
          
         extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
+        print("extracted_melody_condition", extracted_melody_condition.shape)
         masked_extracted_melody_condition = F.interpolate(masked_extracted_melody_condition, size=1024, mode='linear', align_corners=False)
         extracted_condition = torch.concat((masked_extracted_melody_condition, masked_extracted_melody_condition, extracted_melody_condition), dim=0)
         extracted_condition = extracted_condition.transpose(1, 2)
@@ -291,19 +295,19 @@ def main():
     transformer = pipeline.transformer
 
     # # initialize condition extractors
-    condition_extractors = {}
-    melody_conditoner = melody_extractor_full().cuda().float()
-    condition_extractors["melody"] = melody_conditoner
-    for conditioner in condition_extractors.values():
-        conditioner.requires_grad_(True)
+    # condition_extractors = {}
+    # melody_conditoner = melody_extractor_full().cuda().float()
+    # condition_extractors["melody"] = melody_conditoner
+    # for conditioner in condition_extractors.values():
+    #     conditioner.requires_grad_(True)
     # load pretrained condition extractors
-    for conditioner_type, ckpt_path in config["extractor_ckpt"].items():
-        if "bin" in ckpt_path:
-            state_dict = torch.load(ckpt_path)
-        elif "safetensors" in ckpt_path:
-            state_dict = load_file(ckpt_path, device="cpu")
-        condition_extractors[conditioner_type].load_state_dict(state_dict)
-        print(f"load checkpoint from {config['extractor_ckpt']} successfully !")
+    # for conditioner_type, ckpt_path in config["extractor_ckpt"].items():
+    #     if "bin" in ckpt_path:
+    #         state_dict = torch.load(ckpt_path)
+    #     elif "safetensors" in ckpt_path:
+    #         state_dict = load_file(ckpt_path, device="cpu")
+    #     condition_extractors[conditioner_type].load_state_dict(state_dict)
+    #     print(f"load checkpoint from {config['extractor_ckpt']} successfully !")
 
     vae.requires_grad_(False)
     text_encoder.requires_grad_(False)
@@ -357,7 +361,7 @@ def main():
     optimizer_class = torch.optim.AdamW
     params_to_optimize = itertools.chain(
         transformer.parameters(),
-        *[model.parameters() for model in condition_extractors.values()]
+        # *[model.parameters() for model in condition_extractors.values()]
     )
 
     optimizer = optimizer_class(
@@ -419,10 +423,10 @@ def main():
     )
 
     # Prepare everything with our `accelerator`.
-    condition_extractor_values = list(condition_extractors.values())
+    # condition_extractor_values = list(condition_extractors.values())
 
-    *condition_extractor_values, transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler = accelerator.prepare(
-        *condition_extractor_values, transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler
+    transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler = accelerator.prepare(
+        transformer, optimizer, train_dataloader, val_dataloader, lr_scheduler
     )
 
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / config["gradient_accumulation_steps"])
@@ -452,17 +456,16 @@ def main():
     score_dynamics, score_melody, score_rhythm = 0, 0, 0
     if config["log_first"] and accelerator.is_main_process:
         score_dynamics, score_melody, score_rhythm = log_validation(val_dataloader,
-                            condition_extractors,
                             config["condition_type"],
                             pipeline, config, weight_dtype, global_step
                         )
     for epoch in range(first_epoch, config["num_train_epochs"]):
         for step, batch in enumerate(train_dataloader):
             transformer.train()
-            for model in condition_extractors.values():
-                model.train()
+            # for model in condition_extractors.values():
+            #     model.train()
 
-            with accelerator.accumulate(transformer, *condition_extractor_values if condition_extractor_values is not None else transformer):
+            with accelerator.accumulate(transformer):
                 # Convert audios to latent space
                 latents = batch["audio"]
                 bsz, channels, height = latents.shape
@@ -482,7 +485,9 @@ def main():
                     targets = noise  # For epsilon, the target is just the noise
                 prompt_texts = batch["prompt_texts"]
                 melody_condition = batch["melody_condition"]
-                extracted_melody_condition = condition_extractors["melody"](melody_condition.float())
+                # extracted_melody_condition = condition_extractors["melody"](melody_condition.float())
+                desired_repeats = 768 // 128  # Number of repeats needed
+                extracted_melody_condition = melody_condition.repeat_interleave(desired_repeats, dim=1)
                 extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
                 for i in range(len(prompt_texts)):
                     rand_num = random.random()
@@ -563,7 +568,7 @@ def main():
                     params_to_clip = (
                         itertools.chain(
                             transformer.parameters(),
-                            *[model.parameters() for model in condition_extractors.values()]
+                            # *[model.parameters() for model in condition_extractors.values()]
                         )
                     )
                     accelerator.clip_grad_norm_(params_to_clip, 1.0)
@@ -586,7 +591,7 @@ def main():
 
                     if global_step % config["validation_steps"] == 0:
                         score_dynamics, score_melody, score_rhythm = log_validation(val_dataloader,
-                            condition_extractors,
+                            # condition_extractors,
                             config["condition_type"],
                             pipeline, config, weight_dtype, global_step
                         )
