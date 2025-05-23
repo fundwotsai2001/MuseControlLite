@@ -10,30 +10,30 @@ def get_config():
 
         "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/stable_audio_melody_wo_SDD",
+        "output_dir": "./checkpoints/Melody_only_no_extractor_original",
 
-        "transformer_ckpt": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model_1.safetensors",
+        "transformer_ckpt": None,#"./checkpoints/stable_audio_melody_wo_SDD/checkpoint-42000/model_1.safetensors",
 
         "extractor_ckpt": {
             # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
-            "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model.safetensors",
+            # "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-42000/model.safetensors",
             # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
 
-        "wand_run_name": "test",
+        "wand_run_name": "Melody_only_no_extractor_original",
 
         # training hyperparameters
         "GPU_id" : "2",
 
         "train_batch_size": 16,
 
-        "learning_rate": 1e-4,
+        "learning_rate": 5e-5,
 
         "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
 
-        "gradient_accumulation_steps": 4,
+        "gradient_accumulation_steps": 2,
 
-        "max_train_steps": 200000,
+        "max_train_steps": 70000,
 
         "num_train_epochs": 20,
 
@@ -43,7 +43,7 @@ def get_config():
 
         "apadapter": True,
 
-        "lr_scheduler": "constant", # ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]'
+        "lr_scheduler": "linear", # ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]'
 
         "weight_decay": 1e-2,
 
@@ -64,7 +64,7 @@ def get_config():
 
         "denoise_step": 50,
 
-        "log_first": True,
+        "log_first": False,
 
         "sigma_min": 0.3,
 
