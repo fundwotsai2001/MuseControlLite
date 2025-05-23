@@ -3,3 +3,6 @@ wandb
 __pycache__
 generated_audio
 not_using
+SDD_nosinging_audio_conditions
+Qwen_caption.json
+diffusers

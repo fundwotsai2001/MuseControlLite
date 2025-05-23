@@ -489,6 +489,7 @@ class StableAudioPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
+        extracted_condition_audio = None,
         extracted_condition = None,
         prompt: Union[str, List[str]] = None,
         audio_end_in_s: Optional[float] = None,
@@ -726,6 +727,7 @@ class StableAudioPipeline(DiffusionPipeline):
                         t.unsqueeze(0),
                         encoder_hidden_states=text_audio_duration_embeds,
                         encoder_hidden_states_con=extracted_condition,
+                        encoder_hidden_states_audio=extracted_condition_audio,
                         global_hidden_states=audio_duration_embeds,
                         rotary_embedding=rotary_embedding,
                         return_dict=False,

@@ -411,7 +411,6 @@ class StableAudioAttnProcessor2_0_rotary_double(torch.nn.Module):
         ip_key = ip_key.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
         ip_key_length = ip_key.shape[2]
         ip_value = ip_value.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
-        
         ip_key_audio = self.to_k_ip_audio(ip_hidden_states_audio)
         ip_value_audio = self.to_v_ip_audio(ip_hidden_states_audio)
         ip_key_audio = ip_key_audio.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
@@ -437,7 +436,7 @@ class StableAudioAttnProcessor2_0_rotary_double(torch.nn.Module):
         position_ids_key = torch.arange(ip_key_length, dtype=torch.long, device=key.device)
         position_ids_key = position_ids_key.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_key]
         position_ids_value = torch.arange(ip_value_length, dtype=torch.long, device=value.device)
-        
+        position_ids_value = position_ids_value.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_key]
         # Generate position_ids for keys
         position_ids_query_audio = torch.arange(seq_len_query, dtype=torch.long, device=query.device) * (ip_key_audio_length / seq_len_query)
         position_ids_query_audio = position_ids_query_audio.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_query]
