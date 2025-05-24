@@ -12,7 +12,7 @@ def get_config():
 
         "output_dir": "./checkpoints/Audio_only_21000_cont",
 
-        "transformer_ckpt": "./checkpoints/Audio_only_21000/model.safetensors",
+        "transformer_ckpt": "./checkpoints/stable_audio_new_fast_audio_v2/checkpoint-21000/model.safetensors",
 
         "extractor_ckpt": {
             # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
@@ -23,7 +23,7 @@ def get_config():
         "wand_run_name": "Audio_only",
 
         # training hyperparameters
-        "GPU_id" : "1",
+        "GPU_id" : "0",
 
         "train_batch_size": 16,
 
@@ -64,7 +64,7 @@ def get_config():
 
         "denoise_step": 50,
 
-        "log_first": True,
+        "log_first": False,
 
         "sigma_min": 0.3,
 

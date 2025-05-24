@@ -463,8 +463,8 @@ def main():
                     optimizer.step()
                     lr_scheduler.step()
                     optimizer.zero_grad()
-                    gc.collect()
-                    torch.cuda.empty_cache()
+                    # gc.collect()
+                    # torch.cuda.empty_cache()
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
                 audios = []

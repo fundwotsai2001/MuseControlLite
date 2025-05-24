@@ -379,8 +379,8 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
     print("score_dynamics", np.mean(score_dynamics))
     print("score_melody", np.mean(score_melody))
     print("score_rhythm", np.mean(score_rhythm))
-    torch.cuda.empty_cache()
-    gc.collect()
+    # torch.cuda.empty_cache()
+    # gc.collect()
     return np.mean(score_dynamics), np.mean(score_melody), np.mean(score_rhythm)
 def get_alphas_sigmas(t):
     """Returns the scaling factors for the clean image (alpha) and for the
