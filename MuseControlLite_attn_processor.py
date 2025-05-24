@@ -947,7 +947,7 @@ class StableAudioAttnProcessor2_0_rotary_scale_up(torch.nn.Module):
         hidden_states = hidden_states / attn.rescale_output_factor
 
         return hidden_states
-class StableAudioAttnProcessor2_0_rotary_Wk(torch.nn.Module):
+class StableAudioAttnProcessor2_0_rotary_Wq(torch.nn.Module):
     r"""
     Processor for implementing scaled dot-product attention (enabled by default if you're using PyTorch 2.0). This is
     used in the Stable Audio model. It applies rotary embedding on query and key vector, and allows MHA, GQA or MQA.
@@ -966,7 +966,7 @@ class StableAudioAttnProcessor2_0_rotary_Wk(torch.nn.Module):
         self.scale = scale
         self.to_k_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
         self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
-        self.to_v_ip = nn.Linear(cross_attention_dim or hidden_size, hidden_size, bias=False)
+        self.to_q_ip = nn.Linear(1536, 1536, bias=False)
         self.name = name
         self.conv_out = zero_module(nn.Conv1d(1536,1536,kernel_size=1, padding=0, bias=False))     
         self.rotary_emb = LlamaRotaryEmbedding(dim = 64)
@@ -1011,6 +1011,9 @@ class StableAudioAttnProcessor2_0_rotary_Wk(torch.nn.Module):
         # The original cross attention in Stable-audio
         ###############################################################
         query = attn.to_q(hidden_states)
+        ip_query = self.to_q_ip(hidden_states)
+        # print("query.shape", query.shape)
+        # print("ip_query.shape", ip_query.shape)
         ip_hidden_states = encoder_hidden_states_con
         key = attn.to_k(encoder_hidden_states)
         value = attn.to_v(encoder_hidden_states)
@@ -1042,6 +1045,7 @@ class StableAudioAttnProcessor2_0_rotary_Wk(torch.nn.Module):
         ###############################################################
         ip_key = self.to_k_ip(ip_hidden_states)
         ip_value = self.to_v_ip(ip_hidden_states)
+        ip_query = ip_query.view(batch_size, -1, attn.heads, head_dim).transpose(1, 2)
         ip_key = ip_key.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
         ip_key_length = ip_key.shape[2]
         ip_value = ip_value.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
@@ -1060,17 +1064,19 @@ class StableAudioAttnProcessor2_0_rotary_Wk(torch.nn.Module):
         position_ids_key = position_ids_key.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_key]
         position_ids_value = torch.arange(ip_value_length, dtype=torch.long, device=value.device)
         position_ids_value = position_ids_value.unsqueeze(0).expand(batch_size, -1)  # Shape: [batch_size, seq_len_key]
-        
+        # print('position_ids_query', position_ids_query.shape)
+        # print('position_ids_key', position_ids_key.shape)
+        # print('position_ids_value', position_ids_value.shape)
         # Rotate query, keys, values 
-        cos, sin = self.rotary_emb(query, position_ids_query)
-        query_pos = (query * cos.unsqueeze(1)) + (self.rotate_half(query) * sin.unsqueeze(1))
+        cos, sin = self.rotary_emb(ip_query, position_ids_query)
+        ip_query = (ip_query * cos.unsqueeze(1)) + (self.rotate_half(ip_query) * sin.unsqueeze(1))
         cos, sin = self.rotary_emb(ip_key, position_ids_key)
         ip_key = (ip_key * cos.unsqueeze(1)) + (self.rotate_half(ip_key) * sin.unsqueeze(1))
         cos, sin = self.rotary_emb(ip_value, position_ids_value)
         ip_value = (ip_value * cos.unsqueeze(1)) + (self.rotate_half(ip_value) * sin.unsqueeze(1))
         
         ip_hidden_states = F.scaled_dot_product_attention(
-                query_pos, ip_key, ip_value, attn_mask=None, dropout_p=0.0, is_causal=False
+                ip_query, ip_key, ip_value, attn_mask=None, dropout_p=0.0, is_causal=False
             )
         ip_hidden_states = ip_hidden_states.transpose(1, 2).reshape(batch_size, -1, attn.heads * head_dim)
         ip_hidden_states = ip_hidden_states.to(query.dtype)

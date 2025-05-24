@@ -23,13 +23,13 @@ def get_config():
         "wand_run_name": "test",
 
         # training hyperparameters
-        "GPU_id" : "2",
+        "GPU_id" : "0",
 
         "train_batch_size": 16,
 
         "learning_rate": 1e-4,
 
-        "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
+        "attn_processor_type": "with_Wq", # "rotary", "rotary_conv_in", "absolute" 
 
         "gradient_accumulation_steps": 4,
 

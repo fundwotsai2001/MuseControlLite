@@ -41,6 +41,7 @@ from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0_no_rotary,
     StableAudioAttnProcessor2_0_rotary_no_cnn,
     StableAudioAttnProcessor2_0_rotary_scale_up,
+    StableAudioAttnProcessor2_0_rotary_Wq,
 )
 from utils.extract_conditions import compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
 from sklearn.metrics import f1_score
@@ -321,6 +322,7 @@ def main():
         "no_rotary": StableAudioAttnProcessor2_0_no_rotary,
         "no_cnn": StableAudioAttnProcessor2_0_rotary_no_cnn,
         "scale_up": StableAudioAttnProcessor2_0_rotary_scale_up,
+        "with_Wq":StableAudioAttnProcessor2_0_rotary_Wq,
     }
     print(config["attn_processor_type"])
     # Get the processor classes based on the type
