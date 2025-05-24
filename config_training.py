@@ -2,7 +2,7 @@ def get_config():
     return {
         # Load files and checkpoints
 
-        "condition_type": ["melody"], #"melody", "rhythm", "dynamics", "audio"
+        "condition_type": ["audio"], #"melody", "rhythm", "dynamics", "audio"
 
         "meta_data_path": "./ALL_condition_wo_SDD.json",
 
@@ -10,28 +10,28 @@ def get_config():
 
         "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/stable_audio_melody_wo_SDD",
+        "output_dir": "./checkpoints/Audio_only_21000_cont",
 
-        "transformer_ckpt": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model_1.safetensors",
+        "transformer_ckpt": "./checkpoints/Audio_only_21000/model.safetensors",
 
         "extractor_ckpt": {
             # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
-            "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model.safetensors",
+            # "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model.safetensors",
             # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
 
-        "wand_run_name": "test",
+        "wand_run_name": "Audio_only",
 
         # training hyperparameters
-        "GPU_id" : "0",
+        "GPU_id" : "1",
 
         "train_batch_size": 16,
 
-        "learning_rate": 1e-4,
+        "learning_rate": 5e-5,
 
-        "attn_processor_type": "with_Wq", # "rotary", "rotary_conv_in", "absolute" 
+        "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
 
-        "gradient_accumulation_steps": 4,
+        "gradient_accumulation_steps": 8,
 
         "max_train_steps": 200000,
 
@@ -43,7 +43,7 @@ def get_config():
 
         "apadapter": True,
 
-        "lr_scheduler": "constant", # ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]'
+        "lr_scheduler": "linear", # ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]'
 
         "weight_decay": 1e-2,
 

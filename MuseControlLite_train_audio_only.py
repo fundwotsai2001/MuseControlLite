@@ -384,7 +384,7 @@ def main():
                         ## all blank
                         prompt_texts[i] = ""
                         extracted_audio_condition[i] = torch.zeros_like(extracted_audio_condition[i])                  
-                    elif rand_num < 0.55:
+                    elif rand_num < 0.4:
                         ## 0~num1 : melody, rhythm, dynamics or blank
                         ## num1~num2 : audio or blank
                         ## num2~1024: melody, rhythm, dynamics or blank
@@ -395,7 +395,7 @@ def main():
                             extracted_audio_condition[i][:, num2 : ] = 0
                         else:
                             extracted_audio_condition[i][:, : ] = 0
-                    else:
+                    elif rand_num < 0.7:
                         ## 0~num1 : audio or blank
                         ## num1~num2 : melody, rhythm, dynamics or blank
                         ## num2~1024: audio or blank
