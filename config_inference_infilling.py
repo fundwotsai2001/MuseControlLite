@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["dynamics", "rhythm", "melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/Musical_ablation/",
+        "output_dir": "./generated_audio/Musical_outpainting/",
 
         "meta_data_path": "./SDD_nosinging_full_conditions.json",
 
@@ -11,6 +11,8 @@ def get_config():
         # Checkpoints (adapters and extractors): You can choose any combinations you like. 
         ###############
         "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
+        
+        "audio_transformer_ckpt": "./checkpoints/Audio_only-21000/model.safetensors",
         
         "extractor_ckpt": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
@@ -30,7 +32,7 @@ def get_config():
 
         "GPU_id": "0",
 
-        "attn_processor_type": "rotary", # Currently no other available.
+        "attn_processor_type": "rotary_double", # Currently no other available.
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
@@ -54,9 +56,9 @@ def get_config():
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
-        "use_audio_mask": False,
+        "use_audio_mask": True,
 
-        "audio_mask_start_seconds": 24,
+        "audio_mask_start_seconds": 10,
 
         "audio_mask_end_seconds": 2097152 / 44100, # Maximum duration for stable-audio is 2097152 / 44100 seconds
 

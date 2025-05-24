@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["dynamics", "rhythm", "melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/Musical_ablation/",
+        "output_dir": "./generated_audio/audio_outpainting/",
 
         "meta_data_path": "./SDD_nosinging_full_conditions.json",
 
@@ -12,6 +12,8 @@ def get_config():
         ###############
         "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
         
+        "audio_transformer_ckpt": "./checkpoints/Audio_only-21000/model.safetensors",
+
         "extractor_ckpt": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
             "melody": "./checkpoints/woSDD-all/model.safetensors",
@@ -38,7 +40,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
         "denoise_step": 50,
 
