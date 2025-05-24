@@ -58,7 +58,7 @@ class AudioInversionDataset(Dataset):
         # Load numpy arrays concurrently
         def load_npy(path):
             return np.load(path) 
-        melody_path = build_path("./SDD_melody_condition_dir", audio_path)
+        melody_path = build_path("./SDD_nosinging_audio_conditions/SDD_melody_condition_dir", audio_path)
         melody_curve = load_npy(melody_path)
         
         # Load audio tokens, they are encoded with the Stable-audio VAE and saved, skipping the the VAE encoding process saves memory when training MuseControlLite

@@ -1,34 +1,34 @@
 def get_config():
     return {
-        "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["dynamics", "rhythm", "melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/melody_SDD_fp16",
+        "output_dir": "./generated_audio/Musical_ablation/",
 
         "meta_data_path": "./SDD_nosinging_full_conditions.json",
 
-        "audio_data_dir": "./SDD_audio",
+        "audio_data_dir": "./SDD_nosinging_audio_conditions/SDD_audio",
 
         # Checkpoints (adapters and extractors): You can choose any combinations you like. 
         ###############
-        "transformer_ckpt": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-40000/model_1.safetensors",
+        "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
         
         "extractor_ckpt": {
-            # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
-            "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-40000/model.safetensors",
-            # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
+            "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
+            "melody": "./checkpoints/woSDD-all/model.safetensors",
+            "rhythm": "./checkpoints/woSDD-all/model_2.safetensors",
         },
         ###############
 
         # Checkpoints (adapters and extractors): For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/checkpoint-40000/model_1.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/Melody_basic_70000/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/checkpoint-40000/model.safetensors",
+            "melody": "./checkpoints/Melody_basic_70000/model.safetensors",
         },
         ###############
 
-        "GPU_id": "2",
+        "GPU_id": "0",
 
         "attn_processor_type": "rotary", # Currently no other available.
 
@@ -46,7 +46,7 @@ def get_config():
 
         "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
 
-        "weight_dtype": "fp16", # fp16 and fp32 sounds quiet the same.
+        "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
 
         "negative_text_prompt": [""],
 
