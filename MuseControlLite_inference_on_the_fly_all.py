@@ -223,7 +223,7 @@ def main(config):
 
                 else: 
                     extracted_audio_condition = torch.zeros((1, 768, 1024), device="cuda")
-                    masked_extracted_audio_condition = extracted_rhythm_condition
+                    masked_extracted_audio_condition = extracted_audio_condition
                 if config['use_audio_mask']:
                     extracted_rhythm_condition[:,:,:audio_mask_start] = 0
                     extracted_rhythm_condition[:,:,audio_mask_end:] = 0
