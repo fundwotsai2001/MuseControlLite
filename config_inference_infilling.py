@@ -1,8 +1,8 @@
 def get_config():
     return {
-        "condition_type": ["dynamics", "rhythm", "melody"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/Musical_outpainting/",
+        "output_dir": "./generated_audio/Musical_outpainting_25500/",
 
         "meta_data_path": "./SDD_nosinging_full_conditions.json",
 
@@ -12,7 +12,7 @@ def get_config():
         ###############
         "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
         
-        "audio_transformer_ckpt": "./checkpoints/Audio_only-21000/model.safetensors",
+        "audio_transformer_ckpt": "./checkpoints/Audio_only-25500/model.safetensors",
         
         "extractor_ckpt": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
@@ -30,9 +30,9 @@ def get_config():
         },
         ###############
 
-        "GPU_id": "0",
+        "GPU_id": "3",
 
-        "attn_processor_type": "rotary_double", # Currently no other available.
+        "attn_processor_type": "rotary", # Currently no other available.
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
@@ -40,7 +40,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
         "denoise_step": 50,
 
@@ -50,7 +50,7 @@ def get_config():
 
         "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
 
-        "negative_text_prompt": [""],
+        "negative_text_prompt": "",
 
         # The below two mask should complementary, which means every time slice shouldn't receive both audio and music attribute condition.
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
@@ -58,7 +58,7 @@ def get_config():
         ###############
         "use_audio_mask": True,
 
-        "audio_mask_start_seconds": 10,
+        "audio_mask_start_seconds": 24,
 
         "audio_mask_end_seconds": 2097152 / 44100, # Maximum duration for stable-audio is 2097152 / 44100 seconds
 
@@ -69,7 +69,7 @@ def get_config():
         "musical_attribute_mask_end_seconds": 2097152 / 44100 ,
         ###############
 
-        "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
+        "no_text": True, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
 
         "audio_files": [
             "./melody_condition_audio/49_piano.mp3",

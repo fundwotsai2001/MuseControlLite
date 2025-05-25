@@ -286,6 +286,8 @@ def main(config):
             for i, batch in enumerate(tqdm(val_dataloader)):
                 if config["apadapter"]:
                     prompt_texts = batch["prompt_texts"]
+                    if config["no_text"] is True:
+                        prompt_texts = ""
                     caption_id = batch["caption_id"]
                     audio_full_path = batch['audio_full_path'][0]
                     description_path = os.path.join(output_dir, "description.txt")
