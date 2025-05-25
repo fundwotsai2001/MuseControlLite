@@ -253,6 +253,8 @@ class StableAudioAttnProcessor2_0_rotary(torch.nn.Module):
         ip_key = ip_key.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
         ip_key_length = ip_key.shape[2]
         ip_value = ip_value.view(batch_size, -1, kv_heads, head_dim).transpose(1, 2)
+        # print("kv_heads", kv_heads)
+        # print("ip_key", ip_key.shape)
         if kv_heads != attn.heads:
             # if GQA or MQA, repeat the key/value heads to reach the number of query heads.
             heads_per_kv_head = attn.heads // kv_heads

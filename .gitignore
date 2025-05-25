@@ -5,6 +5,8 @@ generated_audio
 not_using
 *.json
 *.csv
+*.mp3
+*.wav
 testing
 SDD_audio
 SDD_dynamics_condition_dir

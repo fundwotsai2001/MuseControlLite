@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/audio_outpainting/",
+        "output_dir": "./camera_ready_evaluation_5_25/Basic_35000_fp32",
 
         "meta_data_path": "./SDD_nosinging_full_conditions.json",
 
@@ -23,16 +23,16 @@ def get_config():
 
         # Checkpoints (adapters and extractors): For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/Melody_basic_70000/model_1.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/stable_audio_melody_wo_SDD_v2/checkpoint-35000/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/Melody_basic_70000/model.safetensors",
+            "melody": "./checkpoints/stable_audio_melody_wo_SDD_v2/checkpoint-35000/model.safetensors",
         },
         ###############
 
-        "GPU_id": "0",
+        "GPU_id": "1",
 
-        "attn_processor_type": "rotary", # Currently no other available.
+        "attn_processor_type": "rotary", # "rotary", "rotary_double", "no_rotary", "no_cnn", "scale_up", "with_Wq"
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
@@ -40,7 +40,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
         "denoise_step": 50,
 
