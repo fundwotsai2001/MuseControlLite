@@ -7,6 +7,7 @@ not_using
 *.csv
 *.mp3
 *.wav
+*.txt
 testing
 SDD_audio
 SDD_dynamics_condition_dir
