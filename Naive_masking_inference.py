@@ -3,9 +3,9 @@
 import argparse
 import torch
 import torchaudio
-from audio_infilling_baseline.Naive_Masking.pipeline_real import AudioInfillingPipeline
-from stable_audio_training_multi_con_jamendo import dynamics_extractor, rhythm_extractor, melody_extractor, CollateFunction, AudioInversionDataset, evaluate_f1_rhythm
-from config_stable_audio_inference import get_config
+from audio_infilling_baseline.Naive_Masking.pipeline_audio_infilling import AudioInfillingPipeline
+from MuseControlLite_inference_musical_ablation_SDD import CollateFunction, AudioInversionDataset
+from config_inference_infilling import get_config
 from torch.utils.data import Dataset, random_split, DataLoader
 from tqdm import tqdm
 import soundfile as sf
@@ -20,13 +20,13 @@ def main():
         audio_data_root=config["audio_data_dir"],
         device="cuda",
         )
-    val_collate_fn = CollateFunction(condition_type=config["condition_type"], mode="val")
+    val_collate_fn = CollateFunction(condition_type=config["condition_type"])
     val_dataloader = DataLoader(
         dataset,
         batch_size=1,
         shuffle=False,
         collate_fn=val_collate_fn,
-        num_workers=config["dataloader_num_workers"],
+        num_workers=1,
         pin_memory=True
     )
     generator = torch.Generator("cuda").manual_seed(0)
@@ -41,12 +41,12 @@ def main():
             prompt_texts = batch["prompt_texts"]
             audio_full_path = batch["audio_full_path"]
             if config["no_text"] is True:
-                prompt_texts = negative_text_prompt
+                prompt_texts = ""
             audio_input, audio_sr = torchaudio.load(audio_full_path[0])
-            audio_input = audio_input.to(device=device, dtype=torch.float16).unsqueeze(0)
+            audio_input = audio_input.to(device=device, dtype=torch.float16).unsqueeze(0)[:,:,:44100*24]
             waveform = pipeline(
                 prompt=prompt_texts,
-                audio_end_in_s=30,
+                audio_end_in_s=2097152/44100,
                 guidance_scale=7.0,
                 num_inference_steps=50,
                 generator=generator,

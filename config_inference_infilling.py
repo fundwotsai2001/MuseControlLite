@@ -2,9 +2,9 @@ def get_config():
     return {
         "condition_type": ["audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/Musical_outpainting_25500/",
+        "output_dir": "./camera_ready_5_26/Musicgen_continuation",
 
-        "meta_data_path": "./SDD_nosinging_full_conditions.json",
+        "meta_data_path": "./SDD_nosinging_50.json",
 
         "audio_data_dir": "./SDD_nosinging_audio_conditions/SDD_audio",
 
@@ -30,7 +30,7 @@ def get_config():
         },
         ###############
 
-        "GPU_id": "3",
+        "GPU_id": "0",
 
         "attn_processor_type": "rotary", # Currently no other available.
 
@@ -69,7 +69,7 @@ def get_config():
         "musical_attribute_mask_end_seconds": 2097152 / 44100 ,
         ###############
 
-        "no_text": True, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
+        "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
 
         "audio_files": [
             "./melody_condition_audio/49_piano.mp3",
