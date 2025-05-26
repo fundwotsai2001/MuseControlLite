@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./camera_ready_5_26/Musicgen_continuation",
+        "output_dir": "./camera_ready_5_26/Naive_masking_out_painting_24_test",
 
         "meta_data_path": "./SDD_nosinging_50.json",
 
