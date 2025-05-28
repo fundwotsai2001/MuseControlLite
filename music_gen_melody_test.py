@@ -13,7 +13,7 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset, random_split, DataLoader
 from torchaudio import transforms as T
-from stable_audio_dataset_utils import Stereo, Mono, PhaseFlipper, PadCrop_Normalized_T
+from utils.stable_audio_dataset_utils import Stereo, Mono, PhaseFlipper, PadCrop_Normalized_T
 import json
 import torch.nn.functional as F
 from SDD_melody_acc import extract_melody_one_hot

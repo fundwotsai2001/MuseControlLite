@@ -174,9 +174,11 @@ def main(config):
                 if isinstance(processor, attn_processor):
                     weight_name_v = name + ".to_v_ip.weight"
                     weight_name_k = name + ".to_k_ip.weight"
+                    weight_name_q = name + ".to_q_ip.weight"
                     conv_out_weight = name + ".conv_out.weight"
                     processor.to_v_ip.weight = torch.nn.Parameter(state_dict[weight_name_v].to(torch.float32))
                     processor.to_k_ip.weight = torch.nn.Parameter(state_dict[weight_name_k].to(torch.float32))
+                    processor.to_q_ip.weight = torch.nn.Parameter(state_dict[weight_name_q].to(torch.float32))
                     processor.conv_out.weight = torch.nn.Parameter(state_dict[conv_out_weight].to(torch.float32))
                     print(f"load {name}")
         transformer.set_attn_processor(attn_procs)

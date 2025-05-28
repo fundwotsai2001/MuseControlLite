@@ -53,25 +53,31 @@ class AudioInversionDataset(Dataset):
         meta_entry = self.meta[i]
         audio_path = meta_entry.get('path')
         caption_id = meta_entry.get('caption_id')
+        dynamics_path = meta_entry.get('dynamics_path')
+        melody_path = meta_entry.get('melody_path')
+        rhythm_path = meta_entry.get('rhythm_path')
+        
         # Build file paths
-        def build_path(root, path, ext_in='.mp3', ext_out='.npy'):
-            file_name = path.replace("/", "_").replace(ext_in, ext_out)
-            return os.path.join(root, file_name)
-        # Load numpy arrays concurrently
+        # def build_path(root, path, ext_in='.mp3', ext_out='.npy'):
+        #     file_name = path.replace("/", "_").replace(ext_in, ext_out)
+        #     return os.path.join(root, file_name)
+        # # Load numpy arrays concurrently
         def load_npy(path):
             return np.load(path) 
-        melody_path = build_path("./SDD_nosinging_audio_conditions/SDD_melody_condition_dir", audio_path)
-        melody_curve = load_npy(melody_path)
+        # melody_path = build_path("./SDD_nosinging_audio_conditions/SDD_melody_condition_dir", audio_path)
+        melody_curve = load_npy(os.path.join("SDD_nosinging_audio_conditions", melody_path))
 
-        dynamics_path = build_path("./SDD_nosinging_audio_conditions/SDD_dynamics_condition_dir", audio_path)
-        dynamics_curve = load_npy(dynamics_path)
+        # dynamics_path = build_path("./SDD_nosinging_audio_conditions/SDD_dynamics_condition_dir", audio_path)
+        dynamics_curve = load_npy(os.path.join("SDD_nosinging_audio_conditions", dynamics_path))
 
-        rhythm_path = build_path("./SDD_nosinging_audio_conditions/SDD_rhythm_condition_dir", audio_path)
-        rhythm_curve = load_npy(rhythm_path)
+        # rhythm_path = build_path("./SDD_nosinging_audio_conditions/SDD_rhythm_condition_dir", audio_path)
+        rhythm_curve = load_npy(os.path.join("SDD_nosinging_audio_conditions", rhythm_path))
         
         # Load audio tokens, they are encoded with the Stable-audio VAE and saved, skipping the the VAE encoding process saves memory when training MuseControlLite
         audio_full_path = os.path.join(self.audio_data_root, audio_path)        
         example = {
+            "melody_path": melody_path,
+            "audio_path": audio_path,
             "text": meta_entry['caption'],
             "caption_id": caption_id,
             "audio_full_path": audio_full_path,
@@ -88,7 +94,10 @@ class CollateFunction:
     def __call__(self, examples):
         caption_id = [example["caption_id"] for example in examples]
         prompt_texts = [example["text"] for example in examples]
+        audio_path = [example["audio_path"] for example in examples]
+        melody_path = [example["melody_path"] for example in examples]
         audio_full_path = [example["audio_full_path"] for example in examples]
+        seconds_start = [example["seconds_start"] for example in examples]
         seconds_start = [example["seconds_start"] for example in examples]
         seconds_end = [example["seconds_end"] for example in examples]
         if len(self.condition_type) != 0:
@@ -104,6 +113,8 @@ class CollateFunction:
             rhythm_condition = [torch.tensor(cond) for cond in rhythm_condition]
             rhythm_condition = torch.stack(rhythm_condition)
             batch = {
+                "melody_path": melody_path,
+                "audio_path": audio_path,
                 "caption_id":caption_id,
                 "audio_full_path": audio_full_path,
                 "melody_condition": melody_condition,
@@ -305,16 +316,18 @@ def main(config):
                     audio_full_path = audio_full_path[0]
 
                     # Dynamics correlation evaluation
-                    dynamics_condition = compute_dynamics(audio_full_path)
+                    dynamics_condition = batch['dynamics_condition'].squeeze(0).detach().cpu().numpy()
                     gen_dynamics = compute_dynamics(gen_file_path)
+                    # print(gen_dynamics.shape, dynamics_condition.shape)
                     min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
                     pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
                     print("pearson_corr", pearson_corr)
                     score_dynamics.append(pearson_corr)
-
+                    melody_path = batch['melody_path'][0].split('SDD_melody_condition_dir/')[-1].replace("_", "/").replace("npy", "mp3")
                     # Melody accuracy evaluation
-                    melody_condition = extract_melody_one_hot(audio_full_path)      
+                    melody_condition = extract_melody_one_hot(os.path.join(config["audio_data_dir"], melody_path))      
                     gen_melody = extract_melody_one_hot(gen_file_path)
+                    # print(melody_condition.shape, gen_melody.shape)
                     min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
                     matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
                     accuracy = matches / min_len_melody

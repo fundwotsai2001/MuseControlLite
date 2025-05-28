@@ -5,6 +5,10 @@ from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0,
     StableAudioAttnProcessor2_0_rotary,
     StableAudioAttnProcessor2_0_rotary_double,
+    StableAudioAttnProcessor2_0_no_rotary,
+    StableAudioAttnProcessor2_0_rotary_no_cnn,
+    StableAudioAttnProcessor2_0_rotary_scale_up,
+    StableAudioAttnProcessor2_0_rotary_Wq,
 )
 import torch.nn as nn
 import torch.nn.functional as F
@@ -143,6 +147,10 @@ def main(config):
         processor_classes = {
             "rotary": StableAudioAttnProcessor2_0_rotary,
             "rotary_double": StableAudioAttnProcessor2_0_rotary_double,
+            "no_rotary": StableAudioAttnProcessor2_0_no_rotary,
+            "no_cnn": StableAudioAttnProcessor2_0_rotary_no_cnn,
+            "scale_up": StableAudioAttnProcessor2_0_rotary_scale_up,
+            "with_Wq":StableAudioAttnProcessor2_0_rotary_Wq,
         }
         # Get the processor classes based on the type
         attn_processor = processor_classes.get(config["attn_processor_type"], None)
@@ -170,6 +178,9 @@ def main(config):
                     processor.to_v_ip.weight = torch.nn.Parameter(state_dict[weight_name_v].to(torch.float32))
                     processor.to_k_ip.weight = torch.nn.Parameter(state_dict[weight_name_k].to(torch.float32))
                     processor.conv_out.weight = torch.nn.Parameter(state_dict[conv_out_weight].to(torch.float32))
+                    processor.to_v_ip.weight.requires_grad = False
+                    processor.to_k_ip.weight.requires_grad = False
+                    processor.conv_out.weight.requires_grad = False
                     print(f"load {name}")
         transformer.set_attn_processor(attn_procs)
         class _Wrapper(AttnProcsLayers):

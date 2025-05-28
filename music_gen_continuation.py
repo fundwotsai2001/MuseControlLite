@@ -4,8 +4,8 @@ from tqdm import tqdm
 config = get_config()
 os.environ['CUDA_VISIBLE_DEVICES'] = config["GPU_id"]
 import torchaudio
-from audiocraft.models import MusicGen
-from audiocraft.data.audio import audio_write
+# from audiocraft.models import MusicGen
+# from audiocraft.data.audio import audio_write
 import matplotlib.pyplot as plt
 import random
 import torch
@@ -15,6 +15,9 @@ from torchaudio import transforms as T
 from utils.stable_audio_dataset_utils import Stereo, Mono, PhaseFlipper, PadCrop_Normalized_T
 import json
 import torch.nn.functional as F
+from utils.extract_conditions import compute_melody, compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
+from madmom.features.downbeats import DBNDownBeatTrackingProcessor,RNNDownBeatProcessor
+
 class AudioInversionDataset(Dataset):
     def __init__(
         self,
@@ -90,9 +93,9 @@ def load_audio_file(filename):
         print(f"Unexpected error while loading {filename}: {e}")
         return None
     
-model = MusicGen.get_pretrained('facebook/musicgen-stereo-melody-large')
-model.set_generation_params(duration=2097152/44100)  # generate 8 seconds.
-generator = torch.Generator().manual_seed(42)
+# model = MusicGen.get_pretrained('facebook/musicgen-stereo-melody-large')
+# model.set_generation_params(duration=2097152/44100)  # generate 8 seconds.
+# generator = torch.Generator().manual_seed(42)
 random.seed(42)
 np.random.seed(42)
 torch.cuda.manual_seed_all(42)
@@ -118,7 +121,9 @@ val_dataloader = DataLoader(
     num_workers=1,
     pin_memory=True
 )
-melody_score = []
+score_dynamics = []
+score_rhythm = []
+score_melody = []
 for i, batch in enumerate(tqdm(val_dataloader)):
     caption_id = batch["caption_id"]
     audio_full_path = batch["audio_full_path"][0]
@@ -129,16 +134,57 @@ for i, batch in enumerate(tqdm(val_dataloader)):
      ## music continuation generation
     waveform, sr = torchaudio.load(audio_full_path)
     # trim the reference audio to the desired length
-    waveform = waveform[..., :int(24 * sr)]  
+    # waveform = waveform[..., :int(24 * sr)]  
 
-    output = model.generate_continuation(
-        prompt=waveform, 
-        prompt_sample_rate=sr,
-        descriptions=prompt_texts, 
-    )
+    # output = model.generate_continuation(
+    #     prompt=waveform, 
+    #     prompt_sample_rate=sr,
+    #     descriptions=prompt_texts, 
+    # )
 
-    result = output.detach().cpu().squeeze(0)
+    # result = output.detach().cpu().squeeze(0)
     
-    file_path = os.path.join(output_dir, f"{caption_id[0]}.wav")
+    gen_file_path = os.path.join(output_dir, f"{caption_id[0]}.wav")
     
-    torchaudio.save(uri=file_path, src=result, sample_rate=32000)
+    # torchaudio.save(uri=gen_file_path, src=result, sample_rate=32000)
+    dynamics_condition = compute_dynamics(audio_full_path)[6615:]
+    # print("dynamics_condition", dynamics_condition.shape)
+    gen_dynamics = compute_dynamics(gen_file_path)[6615:]
+    min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
+    pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
+    print("pearson_corr", pearson_corr)
+    score_dynamics.append(pearson_corr)
+    melody_condition = extract_melody_one_hot(audio_full_path)[:,4135:]        
+    # print("melody_condition", melody_condition.shape)
+    gen_melody = extract_melody_one_hot(gen_file_path)[:,4135:]    
+    min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
+    matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
+    accuracy = matches / min_len_melody
+    score_melody.append(accuracy)
+    print("melody accuracy", accuracy)
+    # Adjust layout to avoid overlap
+    processor = RNNDownBeatProcessor()
+    input_probabilities = processor(audio_full_path)
+    generated_probabilities = processor(gen_file_path)
+    hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
+    input_timestamps = hmm_processor(input_probabilities[24*100:,:])
+    # print("input_probabilities", input_probabilities.shape)
+    generated_timestamps = hmm_processor(generated_probabilities[24*100:,:])
+    precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
+    # Output results
+    print(f"F1 Score: {f1:.2f}")
+    score_rhythm.append(f1)
+data_to_save = {"config": config}
+
+# if "dynamics" in config["condition_type"]:
+data_to_save["score_dynamics"] = np.mean(score_dynamics)
+
+# if "rhythm" in config["condition_type"]:
+data_to_save["score_rhythm"] = np.mean(score_rhythm)
+
+# if "melody" in config["condition_type"]:
+data_to_save["score_melody"] = np.mean(score_melody)
+print(data_to_save)
+file_path = os.path.join(output_dir, "result.txt")
+with open(file_path, "w") as file:
+    json.dump(data_to_save, file, indent=4)

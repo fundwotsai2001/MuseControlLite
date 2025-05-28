@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./camera_ready_5_26/Naive_masking_out_painting_24_test",
+        "output_dir": "./camera_ready_5_27/MuseControlLite_inpainting_together_test",
 
         "meta_data_path": "./SDD_nosinging_50.json",
 
@@ -12,7 +12,7 @@ def get_config():
         ###############
         "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
         
-        "audio_transformer_ckpt": "./checkpoints/Audio_only-25500/model.safetensors",
+        "audio_transformer_ckpt": "./checkpoints/Audio_only-39500/model.safetensors",
         
         "extractor_ckpt": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
@@ -32,7 +32,7 @@ def get_config():
 
         "GPU_id": "0",
 
-        "attn_processor_type": "rotary", # Currently no other available.
+        "attn_processor_type": "rotary", # rotary_double
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
@@ -48,7 +48,7 @@ def get_config():
 
         "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
 
-        "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
+        "weight_dtype": "fp16", # fp16 and fp32 sounds quiet the same.
 
         "negative_text_prompt": "",
 
@@ -58,9 +58,9 @@ def get_config():
         ###############
         "use_audio_mask": True,
 
-        "audio_mask_start_seconds": 24,
+        "audio_mask_start_seconds": 16,
 
-        "audio_mask_end_seconds": 2097152 / 44100, # Maximum duration for stable-audio is 2097152 / 44100 seconds
+        "audio_mask_end_seconds": 32, # Maximum duration for stable-audio is 2097152 / 44100 seconds
 
         "use_musical_attribute_mask": False,
 

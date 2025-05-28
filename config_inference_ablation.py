@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["dynamics", "rhythm", "melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./camera_ready_evaluation/Musical_ablation_half",
+        "output_dir": "./camera_ready_evaluation/Musical_ablation_half_v2/",
 
         "meta_data_path": "./SDD_nosinging_half_conditions.json",
 
@@ -30,7 +30,7 @@ def get_config():
         },
         ###############
 
-        "GPU_id": "0",
+        "GPU_id": "2",
 
         "attn_processor_type": "rotary", # Currently no other available.
 

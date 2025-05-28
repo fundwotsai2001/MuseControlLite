@@ -21,6 +21,9 @@ from torchaudio import transforms as T
 from tqdm import tqdm
 import torchaudio
 from torch.utils.data import Dataset, random_split, DataLoader
+from madmom.features.downbeats import DBNDownBeatTrackingProcessor,RNNDownBeatProcessor
+from utils.extract_conditions import compute_melody, compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
+
 def load_audio_file(filename, target_sr=44100, target_samples=2097152):
     try:
         audio, in_sr = torchaudio.load(filename)    
@@ -233,7 +236,8 @@ def main(config):
     with torch.no_grad():
         for i, batch in enumerate(tqdm(val_dataloader)):
             if config["apadapter"]:
-                prompt_texts = batch["prompt_texts"]
+                prompt_texts = batch["prompt_texts"][0]
+                print(prompt_texts)
                 if config["no_text"] is True:
                     prompt_texts = ""
                 caption_id = batch["caption_id"]
@@ -287,37 +291,36 @@ def main(config):
                 # original_path = os.path.join(output_dir, f"original_{i}.wav")
                 # original_audio = audio.T.float().cpu().numpy()
                 # sf.write(original_path, original_audio, pipe.vae.sampling_rate)
-                audio_full_path = audio_full_path[0]
-
+                print("audio_full_path", audio_full_path)
                 # Dynamics correlation evaluation
-                # dynamics_condition = compute_dynamics(audio_full_path)
-                # gen_dynamics = compute_dynamics(gen_file_path)
-                # min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
-                # pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
-                # print("pearson_corr", pearson_corr)
-                # score_dynamics.append(pearson_corr)
+                dynamics_condition = compute_dynamics(audio_full_path)[6615:]
+                gen_dynamics = compute_dynamics(gen_file_path)[6615:]
+                min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
+                pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
+                print("pearson_corr", pearson_corr)
+                score_dynamics.append(pearson_corr)
 
                 # Melody accuracy evaluation
-                # melody_condition = extract_melody_one_hot(audio_full_path)      
-                # gen_melody = extract_melody_one_hot(gen_file_path)
-                # min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
-                # matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
-                # accuracy = matches / min_len_melody
-                # score_melody.append(accuracy)
-                # print("melody accuracy", accuracy)
+                melody_condition = extract_melody_one_hot(audio_full_path)[:,4135:]        
+                gen_melody = extract_melody_one_hot(gen_file_path)[:,4135:]  
+                min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
+                matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
+                accuracy = matches / min_len_melody
+                score_melody.append(accuracy)
+                print("melody accuracy", accuracy)
 
-                # # Beat detection f1 
-                # # Adjust layout to avoid overlap
-                # processor = RNNDownBeatProcessor()
-                # input_probabilities = processor(audio_full_path)
-                # generated_probabilities = processor(gen_file_path)
-                # hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
-                # input_timestamps = hmm_processor(input_probabilities)
-                # generated_timestamps = hmm_processor(generated_probabilities)
-                # precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
-                # # Output results
-                # print(f"F1 Score: {f1:.2f}")
-                # score_rhythm.append(f1)
+                # Beat detection f1 
+                # Adjust layout to avoid overlap
+                processor = RNNDownBeatProcessor()
+                input_probabilities = processor(audio_full_path)
+                generated_probabilities = processor(gen_file_path)
+                hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
+                input_timestamps = hmm_processor(input_probabilities[24*100:,:])
+                generated_timestamps = hmm_processor(generated_probabilities[24*100:,:])
+                precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
+                # Output results
+                print(f"F1 Score: {f1:.2f}")
+                score_rhythm.append(f1)
 
                 # # Plotting
                 # frame_rate = 100  # Frames per second

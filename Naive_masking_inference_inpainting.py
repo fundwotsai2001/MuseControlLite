@@ -3,7 +3,7 @@
 import argparse
 import torch
 import torchaudio
-from audio_infilling_baseline.Naive_Masking.pipeline_audio_infilling import AudioInfillingPipeline
+from audio_infilling_baseline.Naive_Masking.pipeline_real import AudioInfillingPipeline
 from MuseControlLite_inference_musical_ablation_SDD import CollateFunction, AudioInversionDataset
 from config_inference_infilling import get_config
 from torch.utils.data import Dataset, random_split, DataLoader
@@ -50,7 +50,7 @@ def main():
             if config["no_text"] is True:
                 prompt_texts = ""
             audio_input, audio_sr = torchaudio.load(audio_full_path)
-            audio_input = audio_input.to(device=device, dtype=torch.float16).unsqueeze(0)[:,:,:44100*24]
+            audio_input = audio_input.to(device=device, dtype=torch.float16).unsqueeze(0)
             waveform = pipeline(
                 prompt=prompt_texts,
                 audio_end_in_s=2097152/44100,
@@ -64,16 +64,16 @@ def main():
             # file_path = os.path.join(output_dir, f"audio_{i}.wav")
             output = waveform[0].T.float().cpu().numpy()
             sf.write(gen_file_path, output, pipeline.vae.sampling_rate)
-            dynamics_condition = compute_dynamics(audio_full_path)
-            print("dynamics_condition", dynamics_condition.shape)
-            gen_dynamics = compute_dynamics(gen_file_path)
+            dynamics_condition = compute_dynamics(audio_full_path)[4410:8820]
+            # print("dynamics_condition", dynamics_condition.shape)
+            gen_dynamics = compute_dynamics(gen_file_path)[4410:8820]
             min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
             pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
             print("pearson_corr", pearson_corr)
             score_dynamics.append(pearson_corr)
-            melody_condition = extract_melody_one_hot(audio_full_path)     
-            print("melody_condition", melody_condition.shape)
-            gen_melody = extract_melody_one_hot(gen_file_path)
+            melody_condition = extract_melody_one_hot(audio_full_path)[:,2756:5513]    
+            # print("melody_condition", melody_condition.shape)
+            gen_melody = extract_melody_one_hot(gen_file_path)[:,2756:5513]
             min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
             matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
             accuracy = matches / min_len_melody
@@ -84,9 +84,10 @@ def main():
             input_probabilities = processor(audio_full_path)
             generated_probabilities = processor(gen_file_path)
             hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
-            input_timestamps = hmm_processor(input_probabilities)
-            print("input_probabilities", input_probabilities.shape)
-            generated_timestamps = hmm_processor(generated_probabilities)
+            input_timestamps = hmm_processor(input_probabilities[1600:32*100,:])
+            # print("input_probabilities", input_probabilities.shape)
+            generated_timestamps = hmm_processor(generated_probabilities[1600:32*100,:])
+            print(input_probabilities.shape, generated_probabilities.shape)
             precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
             # Output results
             print(f"F1 Score: {f1:.2f}")

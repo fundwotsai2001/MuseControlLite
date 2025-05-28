@@ -326,14 +326,14 @@ def main(config):
                         extracted_rhythm_condition = torch.zeros((1, 192, 1024), device="cuda")
                         masked_extracted_rhythm_condition = extracted_rhythm_condition
                     if "audio" in condition_type_list:
-                        desired_repeats = 768 // 64  # Number of repeats needed
+                        desired_repeats = 192 // 64  # Number of repeats needed
                         audio = load_audio_file(audio_full_path)
                         audio_condition = pipe.vae.encode(audio.unsqueeze(0).to(weight_dtype).cuda()).latent_dist.sample()
                         print("audio_condition", audio_condition.shape)
                         extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1).float()
                         masked_extracted_audio_condition = torch.zeros_like(extracted_audio_condition)
                     else: 
-                        extracted_audio_condition = torch.zeros((1, 768, 1024), device="cuda")
+                        extracted_audio_condition = torch.zeros((1, 192, 1024), device="cuda")
                         masked_extracted_audio_condition = extracted_audio_condition
                     if config['use_audio_mask']:
                         extracted_rhythm_condition[:,:,:audio_mask_start] = 0
@@ -351,18 +351,13 @@ def main(config):
                         extracted_audio_condition[:,:,musical_attribute_mask_end:] = 0
                     # Use multiple cfg
                     extracted_blank_condition = torch.zeros((1, 192, 1024), device="cuda")
-                    extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_blank_condition), dim=1)
-                    masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, extracted_blank_condition), dim=1)
+                    extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
+                    masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, masked_extracted_audio_condition), dim=1)
                     extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition), dim=0)
                     extracted_condition = extracted_condition.transpose(1, 2)
-                    if config["attn_processor_type"] == "rotary_double":
-                        extracted_condition_audio = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
-                        extracted_condition_audio = extracted_condition_audio.transpose(1, 2)
-                        print("using rotary_double")
                     print(condition_type_list)
                     waveform = pipe(
                         extracted_condition = extracted_condition, 
-                        extracted_condition_audio=extracted_condition_audio if 'extracted_condition_audio' in locals() else None,
                         prompt=prompt_texts,
                         negative_prompt=negative_text_prompt,
                         num_inference_steps=config["denoise_step"],
@@ -386,16 +381,16 @@ def main(config):
                     
 
                     # Dynamics correlation evaluation
-                    dynamics_condition = compute_dynamics(audio_full_path)[6615:]
-                    gen_dynamics = compute_dynamics(gen_file_path)[6615:]
+                    dynamics_condition = compute_dynamics(audio_full_path)[4410:8820]
+                    gen_dynamics = compute_dynamics(gen_file_path)[4410:8820]
                     min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
                     pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
                     print("pearson_corr", pearson_corr)
                     score_dynamics.append(pearson_corr)
 
                     # Melody accuracy evaluation
-                    melody_condition = extract_melody_one_hot(audio_full_path)[:,4135:]         
-                    gen_melody = extract_melody_one_hot(gen_file_path)[:,4135:]
+                    melody_condition = extract_melody_one_hot(audio_full_path)[:,2756:5513] 
+                    gen_melody = extract_melody_one_hot(gen_file_path)[:,2756:5513] 
                     min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
                     matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
                     accuracy = matches / min_len_melody
@@ -412,8 +407,8 @@ def main(config):
                     # print("input_probabilities type", type(input_probabilities))
                     # print("generated_probabilities type", type(generated_probabilities))
                     hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
-                    input_timestamps = hmm_processor(input_probabilities[24*100:,:])
-                    generated_timestamps = hmm_processor(generated_probabilities[24*100:,:])
+                    input_timestamps = hmm_processor(input_probabilities[1600:32*100,:])
+                    generated_timestamps = hmm_processor(generated_probabilities[1600:32*100,:])
                     precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
                     # Output results
                     print(f"F1 Score: {f1:.2f}")
