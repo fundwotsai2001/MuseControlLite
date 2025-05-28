@@ -2,9 +2,9 @@ def get_config():
     return {
         "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./5_28/Basic_no_extractor_with_Wq",
+        "output_dir": "./5_28_missing/Basic",
 
-        "meta_data_path": "./SDD_nosinging_full_conditions.json",
+        "meta_data_path": "./SDD_nosinging_full.json",
 
         "audio_data_dir": "./SDD_nosinging_audio_conditions/SDD_audio",
 
@@ -23,16 +23,16 @@ def get_config():
 
         # Checkpoints (adapters and extractors): For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/Wq_melody_70000/model.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/Melody_only_basic/checkpoint-70000/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/Wq_melody_70000/model.safetensors",
+            "melody": "./checkpoints/Melody_only_basic/checkpoint-70000/model.safetensors",
         },
         ###############
 
         "GPU_id": "0",
 
-        "attn_processor_type": "with_Wq", # "rotary", "rotary_double", "no_rotary", "no_cnn", "scale_up", "with_Wq"
+        "attn_processor_type": "rotary", # "rotary", "rotary_double", "no_rotary", "no_cnn", "scale_up", "with_Wq"
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
