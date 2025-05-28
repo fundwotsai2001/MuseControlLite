@@ -3,3 +3,11 @@ wandb
 __pycache__
 generated_audio
 not_using
+*.json
+*.csv
+*.mp3
+*.wav
+*.txt
+testing
+SDD_nosinging_audio_conditions
+diffusers
