@@ -9,8 +9,5 @@ not_using
 *.wav
 *.txt
 testing
-SDD_audio
-SDD_dynamics_condition_dir
-SDD_melody_condition_dir
-SDD_rhythm_condition_dir
+SDD_nosinging_audio_conditions
 diffusers
