@@ -1,13 +1,16 @@
 def get_config():
     return {
-        "condition_type": ["melody","audio"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["dynamics", "rhythm", "melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/melody_only",
+        "output_dir": "./generated_audio/Musical_ablation/",
+
+        "meta_data_path": "./SDD_nosinging_full_conditions.json",
+
+        "audio_data_dir": "./SDD_nosinging_audio_conditions/SDD_audio",
 
         # Checkpoints (adapters and extractors): You can choose any combinations you like. 
         ###############
         "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
-        "audio_transformer_ckpt": "./checkpoints/Audio_only-21000/model.safetensors",
         
         "extractor_ckpt": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
@@ -18,16 +21,16 @@ def get_config():
 
         # Checkpoints (adapters and extractors): For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/melody-40000/model_1.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/Melody_basic_70000/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/melody-40000/model.safetensors",
+            "melody": "./checkpoints/Melody_basic_70000/model.safetensors",
         },
         ###############
 
-        "GPU_id": "1",
+        "GPU_id": "0",
 
-        "attn_processor_type": "rotary_double", # rotary, rotary_double
+        "attn_processor_type": "rotary", # Currently no other available.
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
@@ -35,9 +38,9 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 0.5, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
-        "denoise_step": 100,
+        "denoise_step": 50,
 
         "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
 
@@ -45,13 +48,13 @@ def get_config():
 
         "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
 
-        "negative_text_prompt": "Low qualiy, noise",
+        "negative_text_prompt": [""],
 
         # The below two mask should complementary, which means every time slice shouldn't receive both audio and music attribute condition.
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
-        "use_audio_mask": True,
+        "use_audio_mask": False,
 
         "audio_mask_start_seconds": 24,
 
@@ -77,8 +80,8 @@ def get_config():
         ],
 
         "text": [
-                # "a recording of a piano",
-                # "a recording of a piano",
+                # "",
+                # "",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",
