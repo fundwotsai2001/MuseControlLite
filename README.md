@@ -20,7 +20,7 @@ gdown 1Q9B333jcq1czA11JKTbM-DHANJ8YqGbP --folder
 ## Inference
 All the hyper-parameters could be found in `config_inference.py`, we provide detailed comments as guidance. Run:
 ```
-python MuseControlLite_inference_on_the_fly_all.py # Capable for all conditions
+MuseControlLite_inference_on_the_fly_all_together.py # Capable for all conditions
 ```
 If you only need melody condition, simply set `"condition_type": ["melody"]` and run:
 ```

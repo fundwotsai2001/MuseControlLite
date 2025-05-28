@@ -1,13 +1,12 @@
 def get_config():
     return {
-        "condition_type": ["melody","audio"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio". You can choose any combinations you like
 
         "output_dir": "./generated_audio/melody_only",
 
-        # Checkpoints (adapters and extractors): You can choose any combinations you like. 
+        # Works for all combinations
         ###############
         "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
-        "audio_transformer_ckpt": "./checkpoints/Audio_only-21000/model.safetensors",
         
         "extractor_ckpt": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
@@ -16,18 +15,22 @@ def get_config():
         },
         ###############
 
-        # Checkpoints (adapters and extractors): For melody only.
+        # When using audio only, do not need extractor
+        #################
+        "audio_transformer_ckpt": "./checkpoints/Audio_only-39500/model.safetensors",
+
+        # For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/melody-40000/model_1.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/40000_Melody_only/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/melody-40000/model.safetensors",
+            "melody": "./checkpoints/40000_Melody_only/model.safetensors",
         },
         ###############
 
-        "GPU_id": "1",
+        "GPU_id": "2",
 
-        "attn_processor_type": "rotary_double", # rotary, rotary_double
+        "attn_processor_type": "rotary", 
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
@@ -35,7 +38,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 0.5, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
         "denoise_step": 100,
 
@@ -51,13 +54,13 @@ def get_config():
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
-        "use_audio_mask": True,
+        "use_audio_mask": False,
 
         "audio_mask_start_seconds": 24,
 
         "audio_mask_end_seconds": 2097152 / 44100, # Maximum duration for stable-audio is 2097152 / 44100 seconds
 
-        "use_musical_attribute_mask": False,
+        "use_musical_attribute_mask": False, # Set to true, if you want to mask melody, rhythm, dynamics.
 
         "musical_attribute_mask_start_seconds": 24,
 
