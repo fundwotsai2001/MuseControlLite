@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["dynamics", "rhythm", "melody", "audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./camera_ready_6_1/MuseControlLite_outpainting",
+        "output_dir": "./camera_ready_6_1/MuseControlLite_inpainting",
 
         "meta_data_path": "./SDD_nosinging_50.json",
 
@@ -60,9 +60,9 @@ def get_config():
         ###############
         "use_audio_mask": True,
 
-        "audio_mask_start_seconds": 24,
+        "audio_mask_start_seconds": 16,
 
-        "audio_mask_end_seconds": 2097152 / 44100, # Maximum duration for stable-audio is 2097152 / 44100 seconds
+        "audio_mask_end_seconds": 32, # Maximum duration for stable-audio is 2097152 / 44100 seconds
 
         "use_musical_attribute_mask": False,
 

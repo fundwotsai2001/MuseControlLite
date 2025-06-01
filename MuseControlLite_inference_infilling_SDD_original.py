@@ -386,16 +386,16 @@ def main(config):
                     
 
                     # Dynamics correlation evaluation
-                    dynamics_condition = compute_dynamics(audio_full_path)[6615:]
-                    gen_dynamics = compute_dynamics(gen_file_path)[6615:]
+                    dynamics_condition = compute_dynamics(audio_full_path)[4410:8820]
+                    gen_dynamics = compute_dynamics(gen_file_path)[4410:8820]
                     min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
                     pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
                     print("pearson_corr", pearson_corr)
                     score_dynamics.append(pearson_corr)
 
                     # Melody accuracy evaluation
-                    melody_condition = extract_melody_one_hot(audio_full_path)[:,4135:]         
-                    gen_melody = extract_melody_one_hot(gen_file_path)[:,4135:]
+                    melody_condition = extract_melody_one_hot(audio_full_path)[:,2756:5513]       
+                    gen_melody = extract_melody_one_hot(gen_file_path)[:,2756:5513]    
                     min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
                     matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
                     accuracy = matches / min_len_melody
@@ -412,8 +412,8 @@ def main(config):
                     # print("input_probabilities type", type(input_probabilities))
                     # print("generated_probabilities type", type(generated_probabilities))
                     hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
-                    input_timestamps = hmm_processor(input_probabilities[24*100:,:])
-                    generated_timestamps = hmm_processor(generated_probabilities[24*100:,:])
+                    input_timestamps = hmm_processor(input_probabilities[1600:32*100,:])
+                    generated_timestamps = hmm_processor(generated_probabilities[1600:32*100,:])
                     precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
                     # Output results
                     print(f"F1 Score: {f1:.2f}")
