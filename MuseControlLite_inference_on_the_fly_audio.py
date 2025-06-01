@@ -91,7 +91,7 @@ def main(config):
     elif config["weight_dtype"] == "bp16":
         weight_dtype = torch.bfloat16
     if config["apadapter"]:
-        from pipeline.stable_audio_multi_cfg_pipe_audio import StableAudioPipeline
+        from pipeline.stable_audio_multi_cfg_pipe import StableAudioPipeline
         pipe = StableAudioPipeline.from_pretrained("stabilityai/stable-audio-open-1.0", torch_dtype=weight_dtype)
         pipe.scheduler.config.sigma_max = config["sigma_max"]
         pipe.scheduler.config.sigma_min = config["sigma_min"]
@@ -114,13 +114,11 @@ def main(config):
                     cross_attention_dim=768,
                     scale=config['ap_scale'],
                 ).to("cuda", dtype=torch.float)
-        if config["transformer_ckpt"] is not None:
-            if "bin" in config["transformer_ckpt"]:
-                state_dict = torch.load(config["transformer_ckpt"])
-                audio_state_dict = torch.load(config["audio_transformer_ckpt"])
-            elif "safetensors" in config["transformer_ckpt"]:
-                state_dict = load_file(config["transformer_ckpt"], device="cuda")
-                audio_state_dict = load_file(config["audio_transformer_ckpt"], device="cuda")
+        if config["audio_transformer_ckpt"] is not None:
+            if "bin" in config["audio_transformer_ckpt"]:
+                state_dict = torch.load(config["audio_transformer_ckpt"])
+            elif "safetensors" in config["audio_transformer_ckpt"]:
+                state_dict = load_file(config["audio_transformer_ckpt"], device="cuda")
             for name, processor in attn_procs.items():
                 if isinstance(processor, attn_processor):
                     weight_name_v = name + ".to_v_ip.weight"
@@ -129,19 +127,6 @@ def main(config):
                     processor.to_v_ip.weight = torch.nn.Parameter(state_dict[weight_name_v].to(torch.float32))
                     processor.to_k_ip.weight = torch.nn.Parameter(state_dict[weight_name_k].to(torch.float32))
                     processor.conv_out.weight = torch.nn.Parameter(state_dict[conv_out_weight].to(torch.float32))
-                    processor.to_v_ip.weight.requires_grad = False
-                    processor.to_k_ip.weight.requires_grad = False
-                    processor.conv_out.weight.requires_grad = False
-                    if config["attn_processor_type"] == "rotary_double":
-                        audio_weight_name_v = name + ".to_v_ip.weight"
-                        audio_weight_name_k = name + ".to_k_ip.weight"
-                        audio_conv_out_weight = name + ".conv_out.weight"
-                        processor.to_v_ip_audio.weight = torch.nn.Parameter(audio_state_dict[audio_weight_name_v].to(torch.float32))
-                        processor.to_k_ip_audio.weight = torch.nn.Parameter(audio_state_dict[audio_weight_name_k].to(torch.float32))
-                        processor.conv_out_audio.weight = torch.nn.Parameter(audio_state_dict[audio_conv_out_weight].to(torch.float32))
-                        processor.to_v_ip_audio.weight.requires_grad = False
-                        processor.to_k_ip_audio.weight.requires_grad = False
-                        processor.conv_out_audio.weight.requires_grad = False
                     print(f"load {name}")
         transformer.set_attn_processor(attn_procs)
         class _Wrapper(AttnProcsLayers):
@@ -174,93 +159,30 @@ def main(config):
                 description_path = os.path.join(output_dir, "description.txt")
                 with open(description_path, 'a') as file:
                     file.write(f'{prompt_texts}\n')
-                if "dynamics" in config["condition_type"]:
-                    dynamics_condition = compute_dynamics(audio_file)
-                    dynamics_condition = torch.from_numpy(dynamics_condition).cuda()
-                    dynamics_condition = dynamics_condition.unsqueeze(0).unsqueeze(0)
-                    print("dynamics_condition", dynamics_condition.shape)
-                    extracted_dynamics_condition = condition_extractors["dynamics"](dynamics_condition.to(torch.float32))
-                    masked_extracted_dynamics_condition =  torch.zeros_like(extracted_dynamics_condition)
-                    extracted_dynamics_condition = F.interpolate(extracted_dynamics_condition, size=1024, mode='linear', align_corners=False) 
-                    masked_extracted_dynamics_condition = F.interpolate(masked_extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
-                else: 
-                    extracted_dynamics_condition = torch.zeros((1, 192, 1024), device="cuda")
-                    masked_extracted_dynamics_condition = extracted_dynamics_condition
-                if "rhythm" in config["condition_type"]:
-                    rnn_processor = RNNDownBeatProcessor()
-                    wave = load_audio_file(audio_file)
-                    original_path = os.path.join(output_dir, f"original_{i}.wav")
-                    sf.write(original_path, wave.T.float().cpu().numpy(), 44100)
-                    rhythm_curve = rnn_processor(original_path)
-                    rhythm_condition = torch.from_numpy(rhythm_curve).cuda()
-                    rhythm_condition = rhythm_condition.transpose(0,1).unsqueeze(0)
-                    print("rhythm_condition", rhythm_condition.shape)
-                    extracted_rhythm_condition = condition_extractors["rhythm"](rhythm_condition.to(torch.float32))
-                    masked_extracted_rhythm_condition = torch.zeros_like(extracted_rhythm_condition)
-                    extracted_rhythm_condition = F.interpolate(extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
-                    masked_extracted_rhythm_condition = F.interpolate(masked_extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)      
-                else: 
-                    extracted_rhythm_condition = torch.zeros((1, 192, 1024), device="cuda")
-                    masked_extracted_rhythm_condition = extracted_rhythm_condition
-                if "melody" in config["condition_type"]:
-                    melody_condition = compute_melody(audio_file)
-                    melody_condition = torch.from_numpy(melody_condition).cuda().unsqueeze(0)
-                    print("melody_condition", melody_condition.shape)
-                    extracted_melody_condition = condition_extractors["melody"](melody_condition.to(torch.float32))
-                    masked_extracted_melody_condition = torch.zeros_like(extracted_melody_condition)
-                    extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
-                    masked_extracted_melody_condition = F.interpolate(masked_extracted_melody_condition, size=1024, mode='linear', align_corners=False)
-                else: 
-                    extracted_melody_condition = torch.zeros((1, 192, 1024), device="cuda")
-                    masked_extracted_melody_condition = extracted_melody_condition
                 if "audio" in config["condition_type"]:
                     desired_repeats = 768 // 64  # Number of repeats needed
                     audio = load_audio_file(audio_file)
                     audio_condition = pipe.vae.encode(audio.unsqueeze(0).to(weight_dtype).cuda()).latent_dist.sample()
                     extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1).float()
                     masked_extracted_audio_condition = torch.zeros_like(extracted_audio_condition)
-                    
-
                 else: 
-                    extracted_audio_condition = torch.zeros((1, 768, 1024), device="cuda")
-                    masked_extracted_audio_condition = extracted_rhythm_condition
+                    extracted_audio_condition = torch.zeros((1, 192, 1024), device="cuda")
+                    masked_extracted_audio_condition = extracted_audio_condition
                 if config['use_audio_mask']:
-                    extracted_rhythm_condition[:,:,:audio_mask_start] = 0
-                    extracted_rhythm_condition[:,:,audio_mask_end:] = 0
-                    extracted_dynamics_condition[:,:,:audio_mask_start] = 0
-                    extracted_dynamics_condition[:,:,audio_mask_end:] = 0
-                    extracted_melody_condition[:,:,:audio_mask_start] = 0
-                    extracted_melody_condition[:,:,audio_mask_end:] = 0
                     extracted_audio_condition[:,:,audio_mask_start:audio_mask_end] = 0
-                    print("audio_mask_start:audio_mask_end", audio_mask_start, audio_mask_end)
-                elif config['use_musical_attribute_mask']:
-                    extracted_rhythm_condition[:,:,musical_attribute_mask_start:musical_attribute_mask_end] = 0
-                    extracted_dynamics_condition[:,:,musical_attribute_mask_start:musical_attribute_mask_end] = 0
-                    extracted_melody_condition[:,:,musical_attribute_mask_start:musical_attribute_mask_end] = 0
-                    extracted_audio_condition[:,:,:musical_attribute_mask_start] = 0
-                    extracted_audio_condition[:,:,musical_attribute_mask_end:] = 0
-                extracted_blank_condition = torch.zeros((1, 192, 1024), device="cuda")
                 # print("extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition", extracted_rhythm_condition.dtype, extracted_dynamics_condition.dtype, extracted_melody_condition.dtype, extracted_audio_condition.dtype)
                 # Use multiple cfg
-                extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_blank_condition), dim=1)
-                masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, extracted_blank_condition), dim=1)
-                extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition, extracted_condition), dim=0)
+                # extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
+                # masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, masked_extracted_audio_condition), dim=1)
+                extracted_condition = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
                 extracted_condition = extracted_condition.transpose(1, 2)
-                if config["attn_processor_type"] == "rotary_double":
-                    extracted_condition_audio = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
-                    extracted_condition_audio = extracted_condition_audio.transpose(1, 2)
-                # import inspect
-                # print(pipe.__class__)                                  # Should show your custom module
-                # print(inspect.signature(pipe.__call__))    
                 waveform = pipe(
                     extracted_condition = extracted_condition, 
-                    extracted_condition_audio=extracted_condition_audio if 'extracted_condition_audio' in locals() else None,
                     prompt=prompt_texts,
                     negative_prompt=negative_text_prompt,
                     num_inference_steps=config["denoise_step"],
                     guidance_scale_text=config["guidance_scale_text"],
-                    guidance_scale_con=config["guidance_scale_con"],
-                    guidance_scale_audio=config["guidance_scale_audio"],
+                    guidance_scale_con=config["guidance_scale_audio"],
                     num_waveforms_per_prompt=1,
                     audio_end_in_s=2097152 / 44100,
                     generator=generator,

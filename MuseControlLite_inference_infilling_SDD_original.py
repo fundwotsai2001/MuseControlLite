@@ -188,7 +188,7 @@ def main(config):
     elif config["weight_dtype"] == "bp16":
         weight_dtype = torch.bfloat16
     if config["apadapter"]:
-        from pipeline.stable_audio_multi_cfg_pipe import StableAudioPipeline
+        from pipeline.stable_audio_multi_cfg_pipe_audio import StableAudioPipeline
         pipe = StableAudioPipeline.from_pretrained("stabilityai/stable-audio-open-1.0", torch_dtype=weight_dtype)
         pipe.scheduler.config.sigma_max = config["sigma_max"]
         pipe.scheduler.config.sigma_min = config["sigma_min"]
@@ -255,7 +255,7 @@ def main(config):
         audio_data_root=config["audio_data_dir"],
         device="cuda",
         )
-    con_combination = [["melody", "audio"], ["audio"],  ["dynamics", "audio"], ["rhythm", "audio"]]
+    con_combination = [["melody", "audio"],  ["audio"], ["dynamics", "audio"], ["rhythm", "audio"]]
     for condition_type_list in con_combination:
         score_melody =[]
         score_dynamics = []
@@ -353,12 +353,11 @@ def main(config):
                     extracted_blank_condition = torch.zeros((1, 192, 1024), device="cuda")
                     extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_blank_condition), dim=1)
                     masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, extracted_blank_condition), dim=1)
-                    extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition), dim=0)
+                    extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition, extracted_condition), dim=0)
                     extracted_condition = extracted_condition.transpose(1, 2)
                     if config["attn_processor_type"] == "rotary_double":
-                        extracted_condition_audio = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
+                        extracted_condition_audio = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
                         extracted_condition_audio = extracted_condition_audio.transpose(1, 2)
-                        print("using rotary_double")
                     print(condition_type_list)
                     waveform = pipe(
                         extracted_condition = extracted_condition, 
@@ -368,6 +367,7 @@ def main(config):
                         num_inference_steps=config["denoise_step"],
                         guidance_scale_text=config["guidance_scale_text"],
                         guidance_scale_con=config["guidance_scale_con"],
+                        guidance_scale_audio=config["guidance_scale_audio"],
                         num_waveforms_per_prompt=1,
                         audio_end_in_s=2097152 / 44100,
                         generator=generator,

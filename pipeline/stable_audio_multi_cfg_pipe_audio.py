@@ -490,6 +490,7 @@ class StableAudioPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
+        extracted_condition_audio = None,
         extracted_condition = None,
         prompt: Union[str, List[str]] = None,
         audio_end_in_s: Optional[float] = None,
@@ -728,6 +729,7 @@ class StableAudioPipeline(DiffusionPipeline):
                         t.unsqueeze(0),
                         encoder_hidden_states=text_audio_duration_embeds,
                         encoder_hidden_states_con=extracted_condition,
+                        encoder_hidden_states_audio = extracted_condition_audio,
                         global_hidden_states=audio_duration_embeds,
                         rotary_embedding=rotary_embedding,
                         return_dict=False,
@@ -741,6 +743,7 @@ class StableAudioPipeline(DiffusionPipeline):
                     noise_pred_uncond, noise_pred_text, noise_pred_both, noise_pred_both_audio = noise_pred.chunk(4)
                     noise_pred = noise_pred_uncond + guidance_scale_text * (noise_pred_text - noise_pred_uncond) + guidance_scale_con * (noise_pred_both - noise_pred_text) \
                     + guidance_scale_audio * (noise_pred_both_audio - noise_pred_both)
+                # print("guidance_scale_audio", guidance_scale_audio)
                 # if do_classifier_free_guidance:
                 #     noise_pred_uncond, noise_pred_text, noise_pred_both, noise_pred_both_audio = noise_pred.chunk(4)
                 #     noise_pred_uncond_no_mask, noise_pred_text_no_mask, noise_pred_both_no_mask, noise_pred_both_audio_no_mask = noise_pred_uncond[:,:,:323], noise_pred_text[:,:,:323], noise_pred_both[:,:,:323], noise_pred_both_audio[:,:,:323]

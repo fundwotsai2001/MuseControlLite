@@ -13,7 +13,7 @@ from safetensors.torch import load_file  # Import safetensors
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-from config_inference import get_config
+from config_inference_infilling import get_config
 import argparse
 import json
 from utils.extract_conditions import compute_melody, compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm

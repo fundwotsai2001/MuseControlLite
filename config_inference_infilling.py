@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["dynamics", "rhythm", "melody", "audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./camera_ready_6_1/MuseControlLite_inpainting_cfg_4",
+        "output_dir": "./camera_ready_6_1/MuseControlLite_outpainting",
 
         "meta_data_path": "./SDD_nosinging_50.json",
 
@@ -12,7 +12,7 @@ def get_config():
         ###############
         "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
         
-        "audio_transformer_ckpt": "./checkpoints/Audio_only-39500/model.safetensors",
+        "audio_transformer_ckpt": "./checkpoints/Audio_only_21000_cont/checkpoint-47500/model.safetensors",
         
         "extractor_ckpt": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
@@ -30,9 +30,9 @@ def get_config():
         },
         ###############
 
-        "GPU_id": "2",
+        "GPU_id": "0",
 
-        "attn_processor_type": "rotary", # rotary_double
+        "attn_processor_type": "rotary_double", # rotary_double
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
@@ -42,9 +42,9 @@ def get_config():
 
         "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
-        "guidance_scale_audio": 1.5,
+        "guidance_scale_audio": 1.0,
 
-        "denoise_step": 1000,
+        "denoise_step": 50,
 
         "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
 
@@ -60,9 +60,9 @@ def get_config():
         ###############
         "use_audio_mask": True,
 
-        "audio_mask_start_seconds": 16,
+        "audio_mask_start_seconds": 24,
 
-        "audio_mask_end_seconds": 32, # Maximum duration for stable-audio is 2097152 / 44100 seconds
+        "audio_mask_end_seconds": 2097152 / 44100, # Maximum duration for stable-audio is 2097152 / 44100 seconds
 
         "use_musical_attribute_mask": False,
 
@@ -84,8 +84,8 @@ def get_config():
         ],
 
         "text": [
-                "",
-                "",
+                "piano",
+                "piano",
                 # "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 # "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 # "This track composed of electronic instruments gives a sense of opening and clearness.",
