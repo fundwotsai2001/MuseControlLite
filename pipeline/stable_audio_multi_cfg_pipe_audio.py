@@ -490,7 +490,6 @@ class StableAudioPipeline(DiffusionPipeline):
     @replace_example_docstring(EXAMPLE_DOC_STRING)
     def __call__(
         self,
-        extracted_condition_audio = None,
         extracted_condition = None,
         prompt: Union[str, List[str]] = None,
         audio_end_in_s: Optional[float] = None,
@@ -600,8 +599,8 @@ class StableAudioPipeline(DiffusionPipeline):
 
         waveform_start = int(audio_start_in_s * self.vae.config.sampling_rate)
         waveform_end = int(audio_end_in_s * self.vae.config.sampling_rate)
-        # waveform_length = int(self.transformer.config.sample_size) #  * audio_end_in_s / 47.554
-        waveform_length = 646
+        waveform_length = int(self.transformer.config.sample_size) #  * audio_end_in_s / 47.554
+        # waveform_length = 646
         # 1. Check inputs. Raise error if not correct
         self.check_inputs(
             prompt,
@@ -729,7 +728,6 @@ class StableAudioPipeline(DiffusionPipeline):
                         t.unsqueeze(0),
                         encoder_hidden_states=text_audio_duration_embeds,
                         encoder_hidden_states_con=extracted_condition,
-                        encoder_hidden_states_audio = extracted_condition_audio,
                         global_hidden_states=audio_duration_embeds,
                         rotary_embedding=rotary_embedding,
                         return_dict=False,

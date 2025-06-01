@@ -15,6 +15,65 @@ import typing as tp
 import torch.nn.functional as F
 import scipy.signal as signal
 from torchaudio import transforms as T
+import torch
+import torchaudio
+import librosa
+import numpy as np
+
+def compute_melody_v2(audio, sr):
+    sample_rate = 44100
+
+    # Load audio file
+    wav, sr = torchaudio.load(audio)
+    if sr != sample_rate:
+        resample = torchaudio.transforms.Resample(orig_freq=sr, new_freq=sample_rate)
+        wav = resample(wav)
+    # Truncate or pad the audio to 2097152 samples
+    target_length = 2097152
+    if wav.size(1) > target_length:
+        # Truncate the audio if it is longer than the target length
+        wav = wav[:, :target_length]
+    elif wav.size(1) < target_length:
+        # Pad the audio with zeros if it is shorter than the target length
+        padding = target_length - wav.size(1)
+        wav = torch.cat([wav, torch.zeros(wav.size(0), padding)], dim=1)
+    filter_y = torchaudio.functional.highpass_biquad(wav, sr, 261.6)
+
+    fmin = librosa.midi_to_hz(0)
+    cqt_list = []
+    for ch in range(filter_y.shape[0]):
+        cqt_spec = librosa.cqt(y=filter_y[ch].numpy(), fmin=fmin, sr=sr, n_bins=128, bins_per_octave=12, hop_length=512)
+        cqt_db = librosa.amplitude_to_db(np.abs(cqt_spec), ref=np.max)  # (freq_bins, time_frames)
+        cqt_list.append(cqt_db)
+
+    cqt_ch0 = cqt_list[0]
+    cqt_ch1 = cqt_list[1]
+
+    time_frames = cqt_ch0.shape[1]
+
+    # 對每個時間點排序，找前4大bin的索引 (頻率維度)
+    # 因為是dB值，數值越大代表能量越高
+    top4_idx_ch0 = np.argsort(cqt_ch0, axis=0)[-4:, :]  # shape (4, time_frames)
+    top4_idx_ch1 = np.argsort(cqt_ch1, axis=0)[-4:, :]  # shape (4, time_frames)
+
+    # 準備結果陣列 shape (8, time_frames)
+    interleaved = np.zeros((8, time_frames), dtype=cqt_ch0.dtype)
+
+    # 對每個時間幀取值，交錯放置
+    for t in range(time_frames):
+        # 取出兩個channel當前時間點 top4 bin索引
+        idx0 = top4_idx_ch0[:, t]  # (4,)
+        idx1 = top4_idx_ch1[:, t]  # (4,)
+
+        # 取能量值
+        vals0 = cqt_ch0[idx0, t]
+        vals1 = cqt_ch1[idx1, t]
+
+        # 交錯放入結果陣列
+        interleaved[0::2, t] = vals0
+        interleaved[1::2, t] = vals1
+
+    return torch.tensor(interleaved)
 
 def compute_music_represent(audio, sr):
     filter_y = torchaudio.functional.highpass_biquad(audio, sr, 261.6)

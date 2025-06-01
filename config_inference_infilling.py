@@ -1,8 +1,8 @@
 def get_config():
     return {
-        "condition_type": ["audio"], # options: "dynamics", "rhythm", "melody", "audio"
+        "condition_type": ["dynamics", "rhythm", "melody", "audio"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./camera_ready_5_27/MuseControlLite_inpainting_together_test",
+        "output_dir": "./camera_ready_6_1/MuseControlLite_inpainting_cfg_4",
 
         "meta_data_path": "./SDD_nosinging_50.json",
 
@@ -30,7 +30,7 @@ def get_config():
         },
         ###############
 
-        "GPU_id": "0",
+        "GPU_id": "2",
 
         "attn_processor_type": "rotary", # rotary_double
 
@@ -40,9 +40,11 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
-        "denoise_step": 50,
+        "guidance_scale_audio": 1.5,
+
+        "denoise_step": 1000,
 
         "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
 
@@ -82,14 +84,14 @@ def get_config():
         ],
 
         "text": [
-                # "",
-                # "",
-                "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
-                "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
-                "This track composed of electronic instruments gives a sense of opening and clearness.",
-                "This track composed of electronic instruments gives a sense of opening and clearness.",
-                "Hopeful instrumental with guitar being the lead and tabla used for percussion in the middle giving a feeling of going somewhere with positive outlook.",
-                "A string ensemble opens the track with legato, melancholic melodies. The violins and violas play beautifully, while the cellos and bass provide harmonic support for the moving passages. The overall feel is deeply melancholic, with an emotionally stirring performance that remains harmonious and a sense of clearness.",
-                "An exceptionally harmonious string performance with a lively tempo in the first half, transitioning to a gentle and beautiful melody in the second half. It creates a warm and comforting atmosphere, featuring cellos and bass providing a solid foundation, while violins and violas showcase the main theme, all without any noise, resulting in a cohesive and serene sound.",
+                "",
+                "",
+                # "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
+                # "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
+                # "This track composed of electronic instruments gives a sense of opening and clearness.",
+                # "This track composed of electronic instruments gives a sense of opening and clearness.",
+                # "Hopeful instrumental with guitar being the lead and tabla used for percussion in the middle giving a feeling of going somewhere with positive outlook.",
+                # "A string ensemble opens the track with legato, melancholic melodies. The violins and violas play beautifully, while the cellos and bass provide harmonic support for the moving passages. The overall feel is deeply melancholic, with an emotionally stirring performance that remains harmonious and a sense of clearness.",
+                # "An exceptionally harmonious string performance with a lively tempo in the first half, transitioning to a gentle and beautiful melody in the second half. It creates a warm and comforting atmosphere, featuring cellos and bass providing a solid foundation, while violins and violas showcase the main theme, all without any noise, resulting in a cohesive and serene sound.",
                 ]
     }

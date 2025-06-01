@@ -14,10 +14,11 @@ import libfmp.c2
 import libfmp.c3
 import libfmp.c4
 
-fn_wav = "/home/fundwotsai/Music-Controlnet-light/to_upload-20250120T091259Z-001/to_upload/musicgen-cont_10.mp3"
-save_path = fn_wav.replace("mp3", "png")
-x, x_duration, X, Fs_X, S, I = libfmp.c4.compute_sm_from_filename(fn_wav,
-                                                L=81, H=10, L_smooth=1, thresh=1)
+fn_wav = "/home/b06611012/fundwotsai/MuseControlLite_v2/5_28_inpainting/Naive_masking_inpainting_16_32/91.wav"
+save_path = "test_novelty.png"
+x, x_dur, X, Fs_X, S, I = libfmp.c4.compute_sm_from_filename(
+                fn_wav, L=41, H=1, L_smooth=1, thresh=0.15
+            )
 print(S.shape)
 def compute_kernel_checkerboard_gaussian(L, var=1, normalize=True):
     """Compute Guassian-like checkerboard kernel [FMP, Section 4.4.1].

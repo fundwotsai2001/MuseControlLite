@@ -30,12 +30,12 @@ def compute_novelty_ssm(S, kernel=None, L=10, var=0.5, exclude=False):
     return nov
 
 # — batch parameters —
-input_folder = "/home/fundwotsai/Music-Controlnet-light/audio_outpainting/"
+input_folder = "/home/b06611012/fundwotsai/MuseControlLite_v2/5_28_outpainting"
 L_kernel   = 3
-boundary   = 10
+boundary   = 240
 
 # prepare output file
-out_txt = os.path.join(input_folder, "novelty_means.txt")
+out_txt = os.path.join(input_folder, f"novelty_means_{boundary}.txt")
 with open(out_txt, "w", encoding="utf-8") as fout:
     fout.write("subfolder,mean_novelty_value\n")
 
@@ -58,16 +58,18 @@ with open(out_txt, "w", encoding="utf-8") as fout:
         for fn_wav in audio_paths:
             # compute self-similarity matrix
             x, x_dur, X, Fs_X, S, I = libfmp.c4.compute_sm_from_filename(
-                fn_wav, L=81, H=10, L_smooth=1, thresh=1
+                fn_wav, L=41, H=1, L_smooth=1, thresh=0.15
             )
             # novelty curve
             nov = compute_novelty_ssm(S, L=L_kernel, exclude=True)
+            # print(nov.shape)
             # your feature at `boundary`
-            val = nov[boundary] - 0.5*nov[boundary-1] - 0.5*nov[boundary+1]
+            
+            val = nov[boundary-1] - 2 * nov[boundary] + nov[boundary+1]
             nov_vals.append(val)
 
         # mean over all files in this subfolder
-        mean_val = np.mean(nov_vals)
+        mean_val = np.mean(nov_vals)*100
         fout.write(f"{entry},{mean_val:.6f}\n")
 
 print(f"✔️ Done! Per-folder means in: {out_txt}")
