@@ -10,7 +10,7 @@ def get_config():
 
         "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/Melody_smallest",
+        "output_dir": "./checkpoints/Melody_new_no_extractor_v2",
 
         "transformer_ckpt": None, #"./checkpoints/stable_audio_new_fast_audio_v2/checkpoint-21000/model.safetensors",
 
@@ -20,18 +20,18 @@ def get_config():
             # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
 
-        "wand_run_name": "Melody_only_smallest",
+        "wand_run_name": "Melody_new_no_extractor",
 
         # training hyperparameters
         "GPU_id" : "2",
 
-        "train_batch_size": 16,
+        "train_batch_size": 6,
 
         "learning_rate": 1e-4,
 
-        "attn_processor_type": "smallest", # "rotary", "rotary_conv_in", "absolute" 
+        "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
 
-        "gradient_accumulation_steps": 2,
+        "gradient_accumulation_steps": 8,
 
         "max_train_steps": 200000,
 
@@ -64,7 +64,7 @@ def get_config():
 
         "denoise_step": 50,
 
-        "log_first": True,
+        "log_first": False,
 
         "sigma_min": 0.3,
 
