@@ -40,7 +40,7 @@ if __name__ == "__main__":
     meta_path = args.meta_path
     data_base_path = args.audio_folder
     new_json = args.new_json
-    melody_dir = "../mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v3"
+    melody_dir = "../mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4"
 
     with open(meta_path) as f:
         meta = json.load(f)  # 全部載入

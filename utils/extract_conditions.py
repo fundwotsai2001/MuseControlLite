@@ -20,60 +20,54 @@ import torchaudio
 import librosa
 import numpy as np
 
-def compute_melody_v2(audio, sr):
-    sample_rate = 44100
+import numpy as np
 
-    # Load audio file
-    wav, sr = torchaudio.load(audio)
-    if sr != sample_rate:
-        resample = torchaudio.transforms.Resample(orig_freq=sr, new_freq=sample_rate)
-        wav = resample(wav)
-    # Truncate or pad the audio to 2097152 samples
-    target_length = 2097152
-    if wav.size(1) > target_length:
-        # Truncate the audio if it is longer than the target length
-        wav = wav[:, :target_length]
-    elif wav.size(1) < target_length:
-        # Pad the audio with zeros if it is shorter than the target length
-        padding = target_length - wav.size(1)
-        wav = torch.cat([wav, torch.zeros(wav.size(0), padding)], dim=1)
-    filter_y = torchaudio.functional.highpass_biquad(wav, sr, 261.6)
+def compute_melody_v2(stereo_audio: torch.Tensor, sr: int) -> np.ndarray:
+    """
+    Args:
+        stereo_audio: torch.Tensor of shape (2, N), 其中 stereo_audio[0] 是左聲道,
+                      stereo_audio[1] 是右聲道。
+        sr:           取樣率 (sampling rate)。
+    Returns:
+        c: np.ndarray of shape (8, T_frames)，
+           每一列代表： [L1, R1, L2, R2, L3, R3, L4, R4]（按 frame 交錯），
+           且每個值都 ∈ {1, 2, …, 128}，對應 CQT 的頻率 bin。
+    """
+    audio, sr = torchaudio.load(stereo_audio)
+    # 1. 先針對左、右聲道分別計算 CQT (128 bins)，回傳 cqt_db 形狀都是 (128, T_frames)
+    cqt_left  = compute_music_represent(audio[0], sr)  # shape: (128, T_frames)
+    cqt_right = compute_music_represent(audio[1], sr)  # shape: (128, T_frames)
 
-    fmin = librosa.midi_to_hz(0)
-    cqt_list = []
-    for ch in range(filter_y.shape[0]):
-        cqt_spec = librosa.cqt(y=filter_y[ch].numpy(), fmin=fmin, sr=sr, n_bins=128, bins_per_octave=12, hop_length=512)
-        cqt_db = librosa.amplitude_to_db(np.abs(cqt_spec), ref=np.max)  # (freq_bins, time_frames)
-        cqt_list.append(cqt_db)
+    # 2. 取得時框 (frame) 數量
+    #    注意：librosa.cqt 的輸出 cqt_db 對應的「時框數」就是第二維度
+    T_frames = cqt_left.shape[1]
 
-    cqt_ch0 = cqt_list[0]
-    cqt_ch1 = cqt_list[1]
+    # 3. 預先配置輸出矩陣 c，dtype 用 int，shape = (8, T_frames)
+    c = np.zeros((8, T_frames), dtype=np.int32)
 
-    time_frames = cqt_ch0.shape[1]
+    # 4. 逐一 frame 處理：對每個 frame 的 128 維度做 top-4
+    for j in range(T_frames):
+        # 4.1 取出當前時框的左、右聲道 CQT 能量（分貝值）
+        col_L = cqt_left[:, j]   # shape: (128,)
+        col_R = cqt_right[:, j]  # shape: (128,)
 
-    # 對每個時間點排序，找前4大bin的索引 (頻率維度)
-    # 因為是dB值，數值越大代表能量越高
-    top4_idx_ch0 = np.argsort(cqt_ch0, axis=0)[-4:, :]  # shape (4, time_frames)
-    top4_idx_ch1 = np.argsort(cqt_ch1, axis=0)[-4:, :]  # shape (4, time_frames)
+        # 4.2 用 numpy.argsort 找到「前 4 大」的索引
+        #     np.argsort 預設是從小到大排序，所以取最後 4 個，再反轉取大到小
+        idx4_L = np.argsort(col_L)[-4:][::-1]  # 0-based, 長度=4
+        idx4_R = np.argsort(col_R)[-4:][::-1]  # 0-based, 長度=4
 
-    # 準備結果陣列 shape (8, time_frames)
-    interleaved = np.zeros((8, time_frames), dtype=cqt_ch0.dtype)
+        # 4.3 轉成 1-based（因為題意寫 pixel ∈ {1,2,…,128}）
+        idx4_L = idx4_L + 1  # 現在範圍是 1..128
+        idx4_R = idx4_R + 1
 
-    # 對每個時間幀取值，交錯放置
-    for t in range(time_frames):
-        # 取出兩個channel當前時間點 top4 bin索引
-        idx0 = top4_idx_ch0[:, t]  # (4,)
-        idx1 = top4_idx_ch1[:, t]  # (4,)
+        # 4.4 交錯填入 c 的第 j 欄
+        #     我們希望 c[:, j] = [L1, R1, L2, R2, L3, R3, L4, R4]
+        for k in range(4):
+            c[2 * k    , j] = idx4_L[k]
+            c[2 * k + 1, j] = idx4_R[k]
 
-        # 取能量值
-        vals0 = cqt_ch0[idx0, t]
-        vals1 = cqt_ch1[idx1, t]
+    return c
 
-        # 交錯放入結果陣列
-        interleaved[0::2, t] = vals0
-        interleaved[1::2, t] = vals1
-
-    return torch.tensor(interleaved)
 
 def compute_music_represent(audio, sr):
     filter_y = torchaudio.functional.highpass_biquad(audio, sr, 261.6)

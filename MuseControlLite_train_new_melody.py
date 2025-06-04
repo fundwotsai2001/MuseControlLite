@@ -38,13 +38,14 @@ from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0,
     StableAudioAttnProcessor2_0_rotary,
     StableAudioAttnProcessor2_0_rotary_double,
+    StableAudioAttnProcessor2_0_no_rotary,
+    StableAudioAttnProcessor2_0_rotary_no_cnn,
+    StableAudioAttnProcessor2_0_rotary_scale_up,
 )
 from utils.extract_conditions import compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
 from sklearn.metrics import f1_score
 from config_training import get_config
-from torch.cuda.amp import autocast
-from madmom.features import RNNBeatProcessor, DBNBeatTrackingProcessor
-from madmom.features.downbeats import DBNDownBeatTrackingProcessor,RNNDownBeatProcessor
+
 ### same way as stable audio loads audio file
 import gc
 torchaudio.set_audio_backend("sox_io")
@@ -92,22 +93,8 @@ class AudioInversionDataset(Dataset):
         # Load numpy arrays concurrently
         def load_npy(path):
             return np.load(path) 
-        if "melody" in self.config['condition_type']:
-            melody_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4", audio_path)
-            melody_curve = load_npy(melody_path)
-        else:
-            melody_curve = np.zeros((128, 4097))
-        if "rhythm" in self.config['condition_type']:
-            rhythm_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_rhythm_test", audio_path)
-            rhythm_curve = load_npy(rhythm_path)
-        else:
-            rhythm_curve = np.zeros((4756, 2))
-        if "dynamics" in self.config['condition_type']:
-            dynamics_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_dynamics_test", audio_path)
-            dynamics_curve = load_npy(dynamics_path)
-        else:
-            dynamics_curve = np.zeros((13108,))
-        
+        melody_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4", audio_path)
+        melody_curve = load_npy(melody_path)
         # Load audio tokens, they are encoded with the Stable-audio VAE and saved, skipping the the VAE encoding process saves memory when training MuseControlLite
         audio_full_path = os.path.join(self.audio_data_root, audio_path)
         audio_token_path = os.path.join(self.audio_codec_root, audio_path.replace('mp3', 'pth'))
@@ -118,8 +105,6 @@ class AudioInversionDataset(Dataset):
             "audio_full_path": audio_full_path,
             "audio": audio,
             "melody_curve": melody_curve,
-            "rhythm_curve": rhythm_curve,
-            "dynamics_curve": dynamics_curve,
             "seconds_start": 0,
             "seconds_end": 2097152 / 44100,
         }
@@ -135,21 +120,13 @@ class CollateFunction:
         seconds_start = [example["seconds_start"] for example in examples]
         seconds_end = [example["seconds_end"] for example in examples]
         if len(self.condition_type) != 0:
-            dynamics_condition = [example["dynamics_curve"] for example in examples]
             melody_condition = [example["melody_curve"] for example in examples]
-            rhythm_condition = [example["rhythm_curve"] for example in examples]
-            rhythm_condition = [torch.tensor(cond) for cond in rhythm_condition]
-            rhythm_condition = torch.stack(rhythm_condition).transpose(2,1)
-            dynamics_condition = [torch.tensor(cond) for cond in dynamics_condition]
-            dynamics_condition = torch.stack(dynamics_condition)
             melody_condition = [torch.tensor(cond) for cond in melody_condition]
             melody_condition = torch.stack(melody_condition)
             audio = torch.stack(audio).float()   
             batch = {
                 "audio_full_path": audio_full_path,
                 "audio": audio,
-                "rhythm_condition": rhythm_condition,
-                "dynamics_condition": dynamics_condition,
                 "melody_condition": melody_condition,
                 "prompt_texts": prompt_texts,
                 "seconds_start": seconds_start,
@@ -166,29 +143,48 @@ class CollateFunction:
             }
 
         return batch
+class melody_extractor_full(nn.Module):
+    def __init__(self):
+        super(melody_extractor_full, self).__init__()
+        self.conv1d_1 = nn.Conv1d(8, 128, kernel_size=3, padding=0, stride=2)  
+        self.conv1d_2 = nn.Conv1d(128, 256, kernel_size=3, padding=1)  
+        self.conv1d_3 = nn.Conv1d(256, 512, kernel_size=3, padding=1, stride=2)  
+        self.conv1d_4 = nn.Conv1d(512, 512, kernel_size=3, padding=1)
+        self.conv1d_5 = nn.Conv1d(512, 768, kernel_size=3, padding=1)
+    def forward(self, x):
+        # original shape: (batchsize, 12, 1296)
+        x = self.conv1d_1(x)# shape: (batchsize, 64, 2048)
+        x = F.silu(x)
+        x = self.conv1d_2(x) # shape: (batchsize, 64, 2048)
+        x = F.silu(x)
+        x = self.conv1d_3(x) # shape: (batchsize, 128, 1024)
+        x = F.silu(x)
+        x = self.conv1d_4(x) # shape: (batchsize, 128, 1024)
+        x = F.silu(x)
+        x = self.conv1d_5(x) # shape: (batchsize, 768, 1024)
+        return x
+
 class MelodyEncoder(nn.Module):
     def __init__(self):
         super().__init__()
-        self.embed = nn.Embedding(num_embeddings=129, embedding_dim=4)
+        self.embed = nn.Embedding(num_embeddings=129, embedding_dim=48)
 
         # Four Conv1d layers, each with kernel_size=3, padding=1:
-        self.conv1 = nn.Conv1d(32, 64, kernel_size=3, padding=1)
-        self.conv2 = nn.Conv1d(64, 64, kernel_size=3, padding=0, stride=2)
-        self.conv3 = nn.Conv1d(64, 128, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv1d(128, 128, kernel_size=3, padding=1, stride=2)
-        self.conv5 = nn.Conv1d(128, 192, kernel_size=3, padding=1)
+        self.conv1 = nn.Conv1d(384, 384, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(384, 768, kernel_size=3, padding=1)
+        self.conv3 = nn.Conv1d(768, 768, kernel_size=3, padding=1)
 
     def forward(self, melody_idxs):
         # melody_idxs: LongTensor of shape (B, 8, 4096)
         B, eight, L = melody_idxs.shape  # L == 4096
 
         # 1) Embed:
-        #    (B, 8, 4096) → (B, 8, 4096, 4)
+        #    (B, 8, 4096) → (B, 8, 4096, 48)
         embedded = self.embed(melody_idxs)
 
-        # 2) Permute & reshape → (B, 8*4, 4096) = (B, 32, 4096)
-        x = embedded.permute(0, 1, 3, 2)      # (B, 8, 4, 4096)
-        x = x.reshape(B, eight * 4, L)       # (B, 32, 4096)
+        # 2) Permute & reshape → (B, 8*48, 4096) = (B, 384, 4096)
+        x = embedded.permute(0, 1, 3, 2)      # (B, 8, 48, 4096)
+        x = x.reshape(B, eight * 48, L)       # (B, 384, 4096)
 
         # 3) Conv1 → (B, 384, 4096)
         x = F.silu(self.conv1(x))
@@ -199,52 +195,7 @@ class MelodyEncoder(nn.Module):
         # 5) Conv3 → (B, 768, 4096)
         x = F.silu(self.conv3(x))
 
-        x = F.silu(self.conv4(x))
-
-        x = F.silu(self.conv5(x))
-
         # Now x is (B, 1536, 4096) and can be sent on to whatever comes next
-        return x
-class dynamics_extractor(nn.Module):
-    def __init__(self):
-        super(dynamics_extractor, self).__init__()
-        self.conv1d_1 = nn.Conv1d(1, 16, kernel_size=3, padding=1, stride=2)  
-        self.conv1d_2 = nn.Conv1d(16, 16, kernel_size=3, padding=1)  
-        self.conv1d_3 = nn.Conv1d(16, 128, kernel_size=3, padding=1, stride=2)
-        self.conv1d_4 = nn.Conv1d(128, 128, kernel_size=3, padding=1)
-        self.conv1d_5 = nn.Conv1d(128, 192, kernel_size=3, padding=1, stride=2)
-    def forward(self, x):
-        # original shape: (batchsize, 1, 8280)
-        # x = x.unsqueeze(1) # shape: (batchsize, 1, 8280)
-        x = self.conv1d_1(x)  # shape: (batchsize, 16, 4140)
-        x = F.silu(x)
-        x = self.conv1d_2(x)  # shape: (batchsize, 16, 4140)
-        x = F.silu(x)
-        x = self.conv1d_3(x)  # shape: (batchsize, 128, 2070)
-        x = F.silu(x)
-        x = self.conv1d_4(x)  # shape: (batchsize, 128, 2070)
-        x = F.silu(x)
-        x = self.conv1d_5(x)  # shape: (batchsize, 192, 1035)
-        return x
-class rhythm_extractor(nn.Module):
-    def __init__(self):
-        super(rhythm_extractor, self).__init__()
-        self.conv1d_1 = nn.Conv1d(2, 16, kernel_size=3, padding=1)  
-        self.conv1d_2 = nn.Conv1d(16, 64, kernel_size=3, padding=1)  
-        self.conv1d_3 = nn.Conv1d(64, 128, kernel_size=3, padding=1, stride=2)  
-        self.conv1d_4 = nn.Conv1d(128, 128, kernel_size=3, padding=1)
-        self.conv1d_5 = nn.Conv1d(128, 192, kernel_size=3, padding=1, stride=2)
-    def forward(self, x):
-        # original shape: (batchsize, 2, 3000)
-        x = self.conv1d_1(x)# shape: (batchsize, 64, 3000)
-        x = F.silu(x)
-        x = self.conv1d_2(x) # shape: (batchsize, 64, 3000)
-        x = F.silu(x)
-        x = self.conv1d_3(x) # shape: (batchsize, 128, 1500)
-        x = F.silu(x)
-        x = self.conv1d_4(x) # shape: (batchsize, 128, 1500)
-        x = F.silu(x)
-        x = self.conv1d_5(x) # shape: (batchsize, 192, 750)
         return x
 
 def log_validation(val_dataloader, condition_extractors, condition_type, pipeline, config, weight_dtype, global_step):
@@ -258,48 +209,18 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
             break
         pipeline.transformer.eval()  # Set the transformer to evaluation mode
         prompt_texts = batch["prompt_texts"]
-        dynamics_condition = batch["dynamics_condition"].unsqueeze(1)
-        rhythm_condition = batch["rhythm_condition"]
         melody_condition = batch["melody_condition"]
         audio_full_path = batch["audio_full_path"]
         ### conditioned
-        extracted_melody_condition = condition_extractors["melody"](melody_condition)
-        extracted_dynamics_condition = condition_extractors["dynamics"](dynamics_condition.to(torch.float32))
-        extracted_rhythm_condition = condition_extractors["rhythm"](rhythm_condition.to(torch.float32))
-        audio_condition = batch["audio"]
-        desired_repeats = 192 // 64  # Number of repeats needed
-        extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1)
-
+        extracted_melody_condition = condition_extractors["melody"](melody_condition)        
         masked_extracted_melody_condition = torch.full_like(extracted_melody_condition.to(torch.float32), fill_value=0)
-        masked_extracted_dynamics_condition = torch.full_like(extracted_dynamics_condition.to(torch.float32), fill_value=0)
-        masked_extracted_rhythm_condition = torch.full_like(extracted_rhythm_condition.to(torch.float32), fill_value=0)
-        masked_extracted_audio_condition = torch.full_like(extracted_audio_condition.to(torch.float32), fill_value=0)
          
-        extracted_rhythm_condition = F.interpolate(extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
-        extracted_dynamics_condition = F.interpolate(extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
         extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
-        masked_extracted_rhythm_condition = F.interpolate(masked_extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
-        masked_extracted_dynamics_condition = F.interpolate(masked_extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
         masked_extracted_melody_condition = F.interpolate(masked_extracted_melody_condition, size=1024, mode='linear', align_corners=False)
-        # concat conditions
-        if step < 3:
-            extracted_rhythm_condition[:,:,:512] = 0
-            extracted_melody_condition[:,:,:512] = 0
-            extracted_dynamics_condition[:,:,:512] = 0
-            extracted_audio_condition[:,:,512:] = 0
-        elif step < 6:
-            extracted_rhythm_condition[:,:,512:] = 0
-            extracted_melody_condition[:,:,512:] = 0
-            extracted_dynamics_condition[:,:,512:] = 0
-            extracted_audio_condition[:,:,:512] = 0
-        # extracted_audio_condition[:,:,:] = 0 # pause audio condition
-        extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
-        masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, masked_extracted_audio_condition), dim=1)
-        extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition), dim=0)
+        extracted_condition = torch.concat((masked_extracted_melody_condition, masked_extracted_melody_condition, extracted_melody_condition), dim=0)
         extracted_condition = extracted_condition.transpose(1, 2)
         generator = torch.Generator("cuda").manual_seed(0)
-        # print("extracted_condition", extracted_condition.shape)
-        # print("test cfg!!")
+
         with torch.no_grad():
             audio = pipeline(
                 extracted_condition = extracted_condition, 
@@ -312,29 +233,12 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
                 num_waveforms_per_prompt=1,
                 generator=generator,
             ).audios
-        dynamics_condition = dynamics_condition[0].detach().cpu().numpy()
-        rhythm_condition = rhythm_condition[0].detach().cpu().numpy()
         melody_condition = melody_condition[0].detach().cpu().numpy()
         output = audio[0].T.float().cpu().numpy()
         gen_file = os.path.join(val_audio_dir, f"validation_{step}.wav")
         original_file = os.path.join(val_audio_dir, f"original_{step}.wav")
         sf.write(gen_file, output, pipeline.vae.sampling_rate)
         shutil.copy(audio_full_path[0], original_file)
-        if "dynamics" in condition_type:
-            gen_dynamics = compute_dynamics(gen_file)
-            original_dynamics = compute_dynamics(original_file)
-            plt.figure(dpi=200)
-            plt.plot(gen_dynamics.squeeze(), label='generated', linewidth=1)
-            plt.xlabel('Time Frame')
-            plt.ylabel('Dynamics (dB)')
-            plt.plot(original_dynamics.squeeze(), label="sliced", linewidth=1)
-            plt.legend(fontsize=8) 
-            plt.savefig(os.path.join(val_audio_dir, f"compare_dynamics_{step}.png"))
-            plt.close()
-            min_len = min(gen_dynamics.shape[0], original_dynamics.shape[0])
-            pearson_corr = np.corrcoef(gen_dynamics.squeeze()[:min_len], original_dynamics.squeeze()[:min_len])[0, 1]
-            print("pearson_corr", pearson_corr)
-            score_dynamics.append(pearson_corr)
         if "melody" in condition_type:           
             gen_melody = extract_melody_one_hot(gen_file)
             melody_condition = extract_melody_one_hot(original_file)
@@ -361,49 +265,10 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
             plt.tight_layout()
             plt.savefig(os.path.join(val_audio_dir, f"compare_melody_{step}.png"))
             plt.close()
-        if "rhythm" in condition_type:
-            processor = RNNDownBeatProcessor()
-            generated_probabilities = processor(gen_file)
-            input_probabilities = rhythm_condition.transpose(1, 0)
-            # print("input_probabilities", input_probabilities.shape)
-            # print("generated_probabilities", generated_probabilities.shape)
-            hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[2, 3, 4, 6, 9, 12], fps=100)
-            input_timestamps = hmm_processor(input_probabilities)
-            generated_timestamps = hmm_processor(generated_probabilities)
-            precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
-            # Output results
-            print(f"F1 Score: {f1:.2f}")
-            score_rhythm.append(f1)
-            # Plotting
-            frame_rate = 100  # Frames per second
-            time_axis = np.linspace(0, len(input_probabilities) / frame_rate, len(input_probabilities))
-            fig, axes = plt.subplots(2, 1, figsize=(10, 8))
-            # Plot Input Probabilities (First Subplot)
-            axes[0].plot(time_axis, input_probabilities[:, 0], label="Input Beat Probability")
-            axes[0].plot(time_axis, input_probabilities[:, 1], label="Input Downbeat Probability", alpha=0.8)
-            axes[0].set_title("Input Beat and Downbeat Probabilities Over Time")
-            axes[0].set_xlabel("Time (s)")
-            axes[0].set_ylabel("Probability")
-            axes[0].legend()
-            axes[0].grid(True)
-            # Plot Generated Probabilities (Second Subplot)
-            axes[1].plot(time_axis, generated_probabilities[:, 0], label="Generated Beat Probability", color='orange')
-            axes[1].plot(time_axis, generated_probabilities[:, 1], label="Generated Downbeat Probability", alpha=0.8, color='red')
-            axes[1].set_title("Generated Beat and Downbeat Probabilities Over Time")
-            axes[1].set_xlabel("Time (s)")
-            axes[1].set_ylabel("Probability")
-            axes[1].legend()
-            axes[1].grid(True)
-            # Adjust layout and save the plot
-            plt.tight_layout()
-            plt.savefig(os.path.join(val_audio_dir, f"compare_rhythm_{step}.png"))
-            plt.close()
         discription_path = os.path.join(val_audio_dir, "description.txt")
         with open(discription_path, 'a') as file:
             file.write(f'{prompt_texts}\n')
-    print("score_dynamics", np.mean(score_dynamics))
     print("score_melody", np.mean(score_melody))
-    print("score_rhythm", np.mean(score_rhythm))
     # torch.cuda.empty_cache()
     # gc.collect()
     return np.mean(score_dynamics), np.mean(score_melody), np.mean(score_rhythm)
@@ -461,15 +326,10 @@ def main():
 
     # # initialize condition extractors
     condition_extractors = {}
-    melody_conditoner = MelodyEncoder().cuda()
+    melody_conditoner = MelodyEncoder().cuda().float()
     condition_extractors["melody"] = melody_conditoner
-    dynamics_conditoner = dynamics_extractor().cuda().float()
-    condition_extractors["dynamics"] = dynamics_conditoner
-    rhythm_conditoner = rhythm_extractor().cuda().float()
-    condition_extractors["rhythm"] = rhythm_conditoner
     for conditioner in condition_extractors.values():
         conditioner.requires_grad_(True)
-
     # load pretrained condition extractors
     for conditioner_type, ckpt_path in config["extractor_ckpt"].items():
         if "bin" in ckpt_path:
@@ -488,6 +348,9 @@ def main():
     processor_classes = {
         "rotary": StableAudioAttnProcessor2_0_rotary,
         "rotary_double": StableAudioAttnProcessor2_0_rotary_double,
+        "no_rotary": StableAudioAttnProcessor2_0_no_rotary,
+        "no_cnn": StableAudioAttnProcessor2_0_rotary_no_cnn,
+        "scale_up": StableAudioAttnProcessor2_0_rotary_scale_up,
     }
     print(config["attn_processor_type"])
     # Get the processor classes based on the type
@@ -582,10 +445,10 @@ def main():
         config['lr_scheduler'],
         optimizer=optimizer,
         step_rules = None,
-        num_warmup_steps = 100,
+        num_warmup_steps = 500,
         num_training_steps = config['max_train_steps'],
         num_cycles = 1,
-        power = 1.0,
+        power = 0.5,
         last_epoch = -1,
     )
 
@@ -605,7 +468,7 @@ def main():
     # The trackers initializes automatically on the main process.
     if accelerator.is_main_process:
         accelerator.init_trackers(
-            project_name="MuseControlLite",      # your W&B project
+            project_name="MuseControlLite_ablation_v2",      # your W&B project
             config=config,                        # whatever hyperparams you’re logging
             init_kwargs={
                 "wandb": {
@@ -652,31 +515,19 @@ def main():
                 else:
                     targets = noise  # For epsilon, the target is just the noise
                 prompt_texts = batch["prompt_texts"]
-                dynamics_condition = batch["dynamics_condition"].unsqueeze(1)
-                extracted_dynamics_condition = condition_extractors["dynamics"](dynamics_condition.float())
-                rhythm_condition = batch["rhythm_condition"]
-                extracted_rhythm_condition = condition_extractors["rhythm"](rhythm_condition.float())
                 melody_condition = batch["melody_condition"]
                 extracted_melody_condition = condition_extractors["melody"](melody_condition)
-                desired_repeats = 192 // 64  # Number of repeats needed
-                extracted_audio_condition = latents.repeat_interleave(desired_repeats, dim=1)
-                extracted_rhythm_condition = F.interpolate(extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
-                extracted_dynamics_condition = F.interpolate(extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
                 extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
                 for i in range(len(prompt_texts)):
                     rand_num = random.random()
                     num1, num2 = random.sample(range(1024), 2)
                     # 50% chance to set prompt_texts[i] to an empty string
-                    if random.random() < 0.1:
-                        prompt_texts[i] = ""
                     # 10% chance to zero out *all* conditions
                     if rand_num < 0.1:
                         ## all blank
+                        prompt_texts[i] = ""
                         extracted_melody_condition[i] = torch.zeros_like(extracted_melody_condition[i])
-                        extracted_rhythm_condition[i] = torch.zeros_like(extracted_rhythm_condition[i])
-                        extracted_dynamics_condition[i] = torch.zeros_like(extracted_dynamics_condition[i])
-                        extracted_audio_condition[i] = torch.zeros_like(extracted_audio_condition[i])                  
-                    elif rand_num < 0.55:
+                    elif rand_num < 0.35:
                         ## 0~num1 : melody, rhythm, dynamics or blank
                         ## num1~num2 : audio or blank
                         ## num2~1024: melody, rhythm, dynamics or blank
@@ -686,20 +537,7 @@ def main():
                             extracted_melody_condition[i][:, num1 : num2] = 0
                         else:
                             extracted_melody_condition[i][:,:] = 0
-                        if random.random() < 0.5:
-                            extracted_rhythm_condition[i][:, num1 : num2] = 0
-                        else:
-                            extracted_rhythm_condition[i][:,:] = 0
-                        if random.random() < 0.5:
-                            extracted_dynamics_condition[i][:, num1 : num2] = 0
-                        else:
-                            extracted_dynamics_condition[i][:,:] = 0
-                        if random.random() < 0.9:
-                            extracted_audio_condition[i][:,  : num1] = 0
-                            extracted_audio_condition[i][:, num2 : ] = 0
-                        else:
-                            extracted_audio_condition[i][:, : ] = 0
-                    else:
+                    elif rand_num < 0.6:
                         ## 0~num1 : audio or blank
                         ## num1~num2 : melody, rhythm, dynamics or blank
                         ## num2~1024: audio or blank
@@ -710,23 +548,6 @@ def main():
                             extracted_melody_condition[i][:, num2 : ] = 0
                         else:
                             extracted_melody_condition[i][:,:] = 0
-                        if random.random() < 0.5:
-                            extracted_rhythm_condition[i][:,  : num1] = 0
-                            extracted_rhythm_condition[i][:, num2 : ] = 0
-                        else:
-                            extracted_rhythm_condition[i][:,:] = 0
-                        if random.random() < 0.5:
-                            extracted_dynamics_condition[i][:,  : num1] = 0
-                            extracted_dynamics_condition[i][:, num2 : ] = 0
-                        else:
-                            extracted_dynamics_condition[i][:,:] = 0
-                        if random.random() < 0.9:
-                            extracted_audio_condition[i][:, num1: num2] = 0
-                        else:
-                            extracted_audio_condition[i][:, : ] = 0
-                if "audio" not in config['condition_type']:
-                    extracted_audio_condition[:,:,:] = 0
-                    print("not using auio")
                 with torch.no_grad():
                     prompt_embeds = pipeline.encode_prompt(
                         prompt=prompt_texts,
@@ -749,8 +570,7 @@ def main():
                 text_audio_duration_embeds = torch.cat(
                     [prompt_embeds, seconds_start_hidden_states, seconds_end_hidden_states], dim=1
                 ) 
-                extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
-                extracted_condition = extracted_condition.transpose(1, 2)
+                extracted_condition = extracted_melody_condition.transpose(1, 2)
                 # This rotary_embedding is for self attention layers in Stable-audio 
                 rotary_embed_dim = pipeline.transformer.config.attention_head_dim // 2
                 rotary_embedding = get_1d_rotary_pos_embed(
@@ -784,8 +604,8 @@ def main():
                     optimizer.step()
                     lr_scheduler.step()
                     optimizer.zero_grad()
-                    gc.collect()
-                    torch.cuda.empty_cache()
+                    # gc.collect()
+                    # torch.cuda.empty_cache()
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
                 audios = []
