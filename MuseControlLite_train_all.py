@@ -93,17 +93,17 @@ class AudioInversionDataset(Dataset):
         def load_npy(path):
             return np.load(path) 
         if "melody" in self.config['condition_type']:
-            melody_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4", audio_path)
+            melody_path = build_path("/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4", audio_path)
             melody_curve = load_npy(melody_path)
         else:
             melody_curve = np.zeros((128, 4097))
         if "rhythm" in self.config['condition_type']:
-            rhythm_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_rhythm_test", audio_path)
+            rhythm_path = build_path("/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_conditions/filtered_no_singer_rhythm_test", audio_path)
             rhythm_curve = load_npy(rhythm_path)
         else:
             rhythm_curve = np.zeros((4756, 2))
         if "dynamics" in self.config['condition_type']:
-            dynamics_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_dynamics_test", audio_path)
+            dynamics_path = build_path("/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_conditions/filtered_no_singer_dynamics_test", audio_path)
             dynamics_curve = load_npy(dynamics_path)
         else:
             dynamics_curve = np.zeros((13108,))
@@ -176,7 +176,7 @@ class MelodyEncoder(nn.Module):
         self.conv2 = nn.Conv1d(64, 64, kernel_size=3, padding=0, stride=2)
         self.conv3 = nn.Conv1d(64, 128, kernel_size=3, padding=1)
         self.conv4 = nn.Conv1d(128, 128, kernel_size=3, padding=1, stride=2)
-        self.conv5 = nn.Conv1d(128, 192, kernel_size=3, padding=1)
+        self.conv5 = nn.Conv1d(128, 256, kernel_size=3, padding=1)
 
     def forward(self, melody_idxs):
         # melody_idxs: LongTensor of shape (B, 8, 4096)
@@ -212,7 +212,7 @@ class dynamics_extractor(nn.Module):
         self.conv1d_2 = nn.Conv1d(16, 16, kernel_size=3, padding=1)  
         self.conv1d_3 = nn.Conv1d(16, 128, kernel_size=3, padding=1, stride=2)
         self.conv1d_4 = nn.Conv1d(128, 128, kernel_size=3, padding=1)
-        self.conv1d_5 = nn.Conv1d(128, 192, kernel_size=3, padding=1, stride=2)
+        self.conv1d_5 = nn.Conv1d(128, 256, kernel_size=3, padding=1, stride=2)
     def forward(self, x):
         # original shape: (batchsize, 1, 8280)
         # x = x.unsqueeze(1) # shape: (batchsize, 1, 8280)
@@ -233,7 +233,7 @@ class rhythm_extractor(nn.Module):
         self.conv1d_2 = nn.Conv1d(16, 64, kernel_size=3, padding=1)  
         self.conv1d_3 = nn.Conv1d(64, 128, kernel_size=3, padding=1, stride=2)  
         self.conv1d_4 = nn.Conv1d(128, 128, kernel_size=3, padding=1)
-        self.conv1d_5 = nn.Conv1d(128, 192, kernel_size=3, padding=1, stride=2)
+        self.conv1d_5 = nn.Conv1d(128, 256, kernel_size=3, padding=1, stride=2)
     def forward(self, x):
         # original shape: (batchsize, 2, 3000)
         x = self.conv1d_1(x)# shape: (batchsize, 64, 3000)
@@ -266,14 +266,14 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
         extracted_melody_condition = condition_extractors["melody"](melody_condition)
         extracted_dynamics_condition = condition_extractors["dynamics"](dynamics_condition.to(torch.float32))
         extracted_rhythm_condition = condition_extractors["rhythm"](rhythm_condition.to(torch.float32))
-        audio_condition = batch["audio"]
-        desired_repeats = 192 // 64  # Number of repeats needed
-        extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1)
+        # audio_condition = batch["audio"]
+        # desired_repeats = 192 // 64  # Number of repeats needed
+        # extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1)
 
         masked_extracted_melody_condition = torch.full_like(extracted_melody_condition.to(torch.float32), fill_value=0)
         masked_extracted_dynamics_condition = torch.full_like(extracted_dynamics_condition.to(torch.float32), fill_value=0)
         masked_extracted_rhythm_condition = torch.full_like(extracted_rhythm_condition.to(torch.float32), fill_value=0)
-        masked_extracted_audio_condition = torch.full_like(extracted_audio_condition.to(torch.float32), fill_value=0)
+        # masked_extracted_audio_condition = torch.full_like(extracted_audio_condition.to(torch.float32), fill_value=0)
          
         extracted_rhythm_condition = F.interpolate(extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
         extracted_dynamics_condition = F.interpolate(extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
@@ -282,19 +282,19 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
         masked_extracted_dynamics_condition = F.interpolate(masked_extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
         masked_extracted_melody_condition = F.interpolate(masked_extracted_melody_condition, size=1024, mode='linear', align_corners=False)
         # concat conditions
-        if step < 3:
-            extracted_rhythm_condition[:,:,:512] = 0
-            extracted_melody_condition[:,:,:512] = 0
-            extracted_dynamics_condition[:,:,:512] = 0
-            extracted_audio_condition[:,:,512:] = 0
-        elif step < 6:
-            extracted_rhythm_condition[:,:,512:] = 0
-            extracted_melody_condition[:,:,512:] = 0
-            extracted_dynamics_condition[:,:,512:] = 0
-            extracted_audio_condition[:,:,:512] = 0
+        # if step < 3:
+        #     extracted_rhythm_condition[:,:,:512] = 0
+        #     extracted_melody_condition[:,:,:512] = 0
+        #     extracted_dynamics_condition[:,:,:512] = 0
+        #     # extracted_audio_condition[:,:,512:] = 0
+        # elif step < 6:
+        #     extracted_rhythm_condition[:,:,512:] = 0
+        #     extracted_melody_condition[:,:,512:] = 0
+        #     extracted_dynamics_condition[:,:,512:] = 0
+            # extracted_audio_condition[:,:,:512] = 0
         # extracted_audio_condition[:,:,:] = 0 # pause audio condition
-        extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
-        masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition, masked_extracted_audio_condition), dim=1)
+        extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition), dim=1)
+        masked_extracted_condition = torch.concat((masked_extracted_rhythm_condition, masked_extracted_dynamics_condition, masked_extracted_melody_condition), dim=1)
         extracted_condition = torch.concat((masked_extracted_condition, masked_extracted_condition, extracted_condition), dim=0)
         extracted_condition = extracted_condition.transpose(1, 2)
         generator = torch.Generator("cuda").manual_seed(0)
@@ -658,8 +658,8 @@ def main():
                 extracted_rhythm_condition = condition_extractors["rhythm"](rhythm_condition.float())
                 melody_condition = batch["melody_condition"]
                 extracted_melody_condition = condition_extractors["melody"](melody_condition)
-                desired_repeats = 192 // 64  # Number of repeats needed
-                extracted_audio_condition = latents.repeat_interleave(desired_repeats, dim=1)
+                # desired_repeats = 192 // 64  # Number of repeats needed
+                # extracted_audio_condition = latents.repeat_interleave(desired_repeats, dim=1)
                 extracted_rhythm_condition = F.interpolate(extracted_rhythm_condition, size=1024, mode='linear', align_corners=False)
                 extracted_dynamics_condition = F.interpolate(extracted_dynamics_condition, size=1024, mode='linear', align_corners=False)
                 extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)
@@ -675,7 +675,6 @@ def main():
                         extracted_melody_condition[i] = torch.zeros_like(extracted_melody_condition[i])
                         extracted_rhythm_condition[i] = torch.zeros_like(extracted_rhythm_condition[i])
                         extracted_dynamics_condition[i] = torch.zeros_like(extracted_dynamics_condition[i])
-                        extracted_audio_condition[i] = torch.zeros_like(extracted_audio_condition[i])                  
                     elif rand_num < 0.55:
                         ## 0~num1 : melody, rhythm, dynamics or blank
                         ## num1~num2 : audio or blank
@@ -694,11 +693,6 @@ def main():
                             extracted_dynamics_condition[i][:, num1 : num2] = 0
                         else:
                             extracted_dynamics_condition[i][:,:] = 0
-                        if random.random() < 0.9:
-                            extracted_audio_condition[i][:,  : num1] = 0
-                            extracted_audio_condition[i][:, num2 : ] = 0
-                        else:
-                            extracted_audio_condition[i][:, : ] = 0
                     else:
                         ## 0~num1 : audio or blank
                         ## num1~num2 : melody, rhythm, dynamics or blank
@@ -720,13 +714,6 @@ def main():
                             extracted_dynamics_condition[i][:, num2 : ] = 0
                         else:
                             extracted_dynamics_condition[i][:,:] = 0
-                        if random.random() < 0.9:
-                            extracted_audio_condition[i][:, num1: num2] = 0
-                        else:
-                            extracted_audio_condition[i][:, : ] = 0
-                if "audio" not in config['condition_type']:
-                    extracted_audio_condition[:,:,:] = 0
-                    print("not using auio")
                 with torch.no_grad():
                     prompt_embeds = pipeline.encode_prompt(
                         prompt=prompt_texts,
@@ -749,7 +736,7 @@ def main():
                 text_audio_duration_embeds = torch.cat(
                     [prompt_embeds, seconds_start_hidden_states, seconds_end_hidden_states], dim=1
                 ) 
-                extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition, extracted_audio_condition), dim=1)
+                extracted_condition = torch.concat((extracted_rhythm_condition, extracted_dynamics_condition, extracted_melody_condition), dim=1)
                 extracted_condition = extracted_condition.transpose(1, 2)
                 # This rotary_embedding is for self attention layers in Stable-audio 
                 rotary_embed_dim = pipeline.transformer.config.attention_head_dim // 2

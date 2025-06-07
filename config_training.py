@@ -4,11 +4,11 @@ def get_config():
 
         "condition_type": ["melody", "rhythm", "dynamics"], #"melody", "rhythm", "dynamics", "audio"
 
-        "meta_data_path": "./ALL_condition_wo_SDD_v2.json",
+        "meta_data_path": "./ALL_condition_wo_SDD.json",
 
-        "audio_data_dir": "../mtg_full_47s",
+        "audio_data_dir": "/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s",
 
-        "audio_codec_root": "../mtg_full_47s_codec",
+        "audio_codec_root": "/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_codec",
 
         "output_dir": "./checkpoints/ALL_new_melody",
 
@@ -23,7 +23,7 @@ def get_config():
         "wand_run_name": "ALL_new_melody",
 
         # training hyperparameters
-        "GPU_id" : "2",
+        "GPU_id" : "0",
 
         "train_batch_size": 12,
 
@@ -31,7 +31,7 @@ def get_config():
 
         "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
 
-        "gradient_accumulation_steps": 8,
+        "gradient_accumulation_steps": 16,
 
         "max_train_steps": 200000,
 
