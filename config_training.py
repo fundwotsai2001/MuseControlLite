@@ -25,7 +25,7 @@ def get_config():
         # training hyperparameters
         "GPU_id" : "2",
 
-        "train_batch_size": 16,
+        "train_batch_size": 12,
 
         "learning_rate": 1e-4,
 
