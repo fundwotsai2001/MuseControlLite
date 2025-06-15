@@ -1,8 +1,8 @@
 def get_config():
     return {
-        "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio". You can choose any combinations you like
+        "condition_type": ["audio"], # options: "dynamics", "rhythm", "melody", "audio". You can choose any combinations you like
 
-        "output_dir": "./generated_audio/melody_only",
+        "output_dir": "./generated_audio/audio_only",
 
         # Works for all combinations
         ###############
@@ -17,7 +17,7 @@ def get_config():
 
         # When using audio only, do not need extractor
         #################
-        "audio_transformer_ckpt": "./checkpoints/Audio_only-39500/model.safetensors",
+        "audio_transformer_ckpt": "./checkpoints/70000_Audio/model.safetensors",
 
         # For melody only.
         ###############
@@ -40,6 +40,8 @@ def get_config():
 
         "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
+        "guidance_scale_audio": 1.0,
+        
         "denoise_step": 100,
 
         "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
@@ -54,7 +56,7 @@ def get_config():
         # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
-        "use_audio_mask": False,
+        "use_audio_mask": True,
 
         "audio_mask_start_seconds": 24,
 

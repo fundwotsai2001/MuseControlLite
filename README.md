@@ -23,13 +23,14 @@ To use the stable-audio open 1.0 model, you will need to a token generated from 
 huggingface-cli login
 ```
 ## Inference
-All the hyper-parameters could be found in `config_inference.py`, we provide detailed comments as guidance. Run:
+All the hyper-parameters could be found in `config_inference.py`, we provide detailed comments as guidance, especially, you can use any combination for `"condition_type"`. Run:
 ```
-MuseControlLite_inference_on_the_fly_all_together.py # Capable for all conditions
+MuseControlLite_inference_on_the_fly_all_together.py
 ```
 If you only need melody condition, simply set `"condition_type": ["melody"]` in `config_inference.py` and run:
 ```
-python MuseControlLite_inference_on_the_fly_melody.py # Specialized on melody
+python MuseControlLite_train_melody_stereo.py # Specialized on melody using stereo melody. (Recommened, updated version)
+python MuseControlLite_train_melody_mono.py # Specialized on melody, using mono melody. (Used in the paper)
 ```
 ## Finetuning with your own dataset
 ### Caption labeling
@@ -61,7 +62,7 @@ python extract_musical_attribute_conditions.py --audio_folder "../mtg_full_47s" 
 ```
 This will extract the conditions so that you don't have to do it on the fly during training.
 ### VAE extraction
-Set `--audio_folder`, `--meta_path`, `--latent_dir`, `--batch_size`, and run:
+The training code used preprocessed latents, so that we can skip the VAE encoding during training. To preprocess latents, run:
 ```
 python stable_audio_VAE_encode.py --audio_folder "../mtg_full_47s" --meta_path "./Qwen_caption.json" --latent_dir "./Jamendo_audio_47s_latent" --batch_size 1
 ```
@@ -75,7 +76,7 @@ python MuseControlLite_train_all.py
 
 If you only want to train on one condition, you might try this:
 ```
-python MuseControlLite_train_melody_only.py
+python MuseControlLite_train_melody_stereo.py
 # You can modify the code for to other conditions.
 ```
 For audio in-painting and out-painting:

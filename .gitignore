@@ -10,5 +10,5 @@ not_using
 *.txt
 !requirements.txt
 testing
-SDD_nosinging_audio_conditions
+SDD_nosinging
 diffusers
