@@ -12,17 +12,22 @@ cd MuseControlLite_v2
 conda create -n stable-audio python=3.11
 conda activate stable-audio
 pip install -r requirements.txt
+sudo apt install ffmpeg # For Linux
 
 ## Install checkpoint
 gdown 1Q9B333jcq1czA11JKTbM-DHANJ8YqGbP --folder
 ```
-
+## huggingface-cli login
+To use the stable-audio open 1.0 model, you will need to a token generated from https://huggingface.co/settings/tokens .
+```
+huggingface-cli login
+```
 ## Inference
 All the hyper-parameters could be found in `config_inference.py`, we provide detailed comments as guidance. Run:
 ```
 MuseControlLite_inference_on_the_fly_all_together.py # Capable for all conditions
 ```
-If you only need melody condition, simply set `"condition_type": ["melody"]` and run:
+If you only need melody condition, simply set `"condition_type": ["melody"]` in `config_inference.py` and run:
 ```
 python MuseControlLite_inference_on_the_fly_melody.py # Specialized on melody
 ```

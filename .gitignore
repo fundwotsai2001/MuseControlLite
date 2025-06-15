@@ -8,6 +8,7 @@ not_using
 *.mp3
 *.wav
 *.txt
+!requirements.txt
 testing
 SDD_nosinging_audio_conditions
 diffusers

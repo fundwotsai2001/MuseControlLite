@@ -43,7 +43,7 @@ lazy_loader==0.4
 libclang==18.1.1
 librosa==0.10.2.post1
 llvmlite==0.43.0
-madmom @ git+https://github.com/CPJKU/madmom@27f032e8947204902c675e5e341a3faf5dc86dae
+git+https://github.com/YianLai0327/madmom.git
 Markdown==3.7
 MarkupSafe==3.0.2
 matplotlib==3.9.2

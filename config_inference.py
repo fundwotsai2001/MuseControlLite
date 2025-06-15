@@ -21,14 +21,14 @@ def get_config():
 
         # For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/40000_Melody_only/model_1.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/70000_Melody_stereo/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/40000_Melody_only/model.safetensors",
+            "melody": "./checkpoints/70000_Melody_stereo/model.safetensors",
         },
         ###############
 
-        "GPU_id": "2",
+        "GPU_id": "0",
 
         "attn_processor_type": "rotary", 
 
