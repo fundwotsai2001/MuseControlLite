@@ -32,15 +32,15 @@ def process_item(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Stable-audio VAE encode")
-    parser.add_argument("--audio_folder", type=str, default="../mtg_full_47s")
-    parser.add_argument("--meta_path", type=str, default="./ALL_condition_wo_SDD.json")
-    parser.add_argument("--new_json", type=str, default="./ALL_condition_wo_SDD_v2.json")
-    args = parser.parse_args()
+    parser.add_argument("--audio_folder", type=str, default="./SDD_nosinging_audio_conditions/SDD_audio", help="The audio folder path")
+    parser.add_argument("--meta_path", type=str, default="./SDD_nosinging_full.json", help="A list with dictionaries save in a json file")
+    parser.add_argument("--new_json", type=str, default="./SDD_nosinging_full_conditions.json", help="json file with conditions")
+    args = parser.parse_args()  # Parse the arguments
 
     meta_path = args.meta_path
     data_base_path = args.audio_folder
     new_json = args.new_json
-    melody_dir = "../mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4"
+    melody_dir = "./SDD_melody_condition_dir_v2"
 
     with open(meta_path) as f:
         meta = json.load(f)  # 全部載入

@@ -22,7 +22,7 @@ import numpy as np
 
 import numpy as np
 
-def compute_melody_v2(stereo_audio: torch.Tensor, sr: int) -> np.ndarray:
+def compute_melody_v2(stereo_audio: torch.Tensor) -> np.ndarray:
     """
     Args:
         stereo_audio: torch.Tensor of shape (2, N), 其中 stereo_audio[0] 是左聲道,
@@ -154,6 +154,52 @@ def compute_dynamics(audio_file, hop_length=160, target_sample_rate=44100, cut=F
     dynamics_db = np.clip(energy, 1e-6, None)
     dynamics_db = librosa.amplitude_to_db(energy, ref=np.max).squeeze(0)
     smoothed_dynamics = savgol_filter(dynamics_db, window_length=279, polyorder=1)
+    # print(smoothed_dynamics.shape)
+    return smoothed_dynamics
+def compute_dynamics_v2(audio_file, hop_length=160, target_sample_rate=44100, cut=False):
+    """
+    Compute the dynamics curve for a given audio file.
+    
+    Args:
+        audio_file (str): Path to the audio file.
+        window_length (int): Length of FFT window for computing the spectrogram.
+        hop_length (int): Number of samples between successive frames.
+        smoothing_window (int): Length of the Savitzky-Golay filter window.
+        polyorder (int): Polynomial order of the Savitzky-Golay filter.
+
+    Returns:
+        dynamics_curve (numpy.ndarray): The computed dynamic values in dB.
+    """
+    # Load audio file
+    waveform, original_sample_rate = torchaudio.load(audio_file)
+    if original_sample_rate != target_sample_rate:
+        resampler = torchaudio.transforms.Resample(orig_freq=original_sample_rate, new_freq=target_sample_rate)
+        waveform = resampler(waveform)
+    if cut:
+        waveform = waveform[:, :2097152]
+    # Ensure waveform has a single channel (e.g., select the first channel if multi-channel)
+    # waveform = waveform.mean(dim=0, keepdim=True)  # Mix all channels into one
+    # waveform = waveform.clamp(-1, 1).numpy()
+    left = waveform[0, :].clamp(-1, 1).numpy()
+    right = waveform[1, :].clamp(-1, 1).numpy()
+
+    S_left = np.abs(librosa.stft(left, n_fft=1024, hop_length=hop_length))
+    mel_filter_bank = librosa.filters.mel(sr=target_sample_rate, n_fft=1024, n_mels=64, fmin=0, fmax=8000)
+    S_left = np.dot(mel_filter_bank, S_left)
+    energy_left = np.sum(S_left**2, axis=0)
+    dynamics_db_left = np.clip(energy_left, 1e-6, None)
+    dynamics_db_left = librosa.amplitude_to_db(energy_left, ref=np.max)
+    smoothed_dynamics_left = savgol_filter(dynamics_db_left, window_length=279, polyorder=1)
+
+    S_right = np.abs(librosa.stft(right, n_fft=1024, hop_length=hop_length))
+    mel_filter_bank = librosa.filters.mel(sr=target_sample_rate, n_fft=1024, n_mels=64, fmin=0, fmax=8000)
+    S_right = np.dot(mel_filter_bank, S_right)
+    energy_right = np.sum(S_right**2, axis=0)
+    dynamics_db_right = np.clip(energy_right, 1e-6, None)
+    dynamics_db_right = librosa.amplitude_to_db(energy_right, ref=np.max)
+    smoothed_dynamics_right = savgol_filter(dynamics_db_right, window_length=279, polyorder=1)
+
+    smoothed_dynamics = np.stack([smoothed_dynamics_left, smoothed_dynamics_right], axis=0)
     # print(smoothed_dynamics.shape)
     return smoothed_dynamics
 def extract_melody_one_hot(audio_path,

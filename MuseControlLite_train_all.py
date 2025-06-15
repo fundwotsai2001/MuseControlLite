@@ -93,20 +93,20 @@ class AudioInversionDataset(Dataset):
         def load_npy(path):
             return np.load(path) 
         if "melody" in self.config['condition_type']:
-            melody_path = build_path("/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4", audio_path)
+            melody_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_melody_test_new_v4", audio_path)
             melody_curve = load_npy(melody_path)
         else:
             melody_curve = np.zeros((128, 4097))
         if "rhythm" in self.config['condition_type']:
-            rhythm_path = build_path("/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_conditions/filtered_no_singer_rhythm_test", audio_path)
+            rhythm_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_rhythm_test", audio_path)
             rhythm_curve = load_npy(rhythm_path)
         else:
             rhythm_curve = np.zeros((4756, 2))
         if "dynamics" in self.config['condition_type']:
-            dynamics_path = build_path("/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_conditions/filtered_no_singer_dynamics_test", audio_path)
+            dynamics_path = build_path("../mtg_full_47s_conditions/filtered_no_singer_dynamics_test_v2", audio_path)
             dynamics_curve = load_npy(dynamics_path)
         else:
-            dynamics_curve = np.zeros((13108,))
+            dynamics_curve = np.zeros((2,13108))
         
         # Load audio tokens, they are encoded with the Stable-audio VAE and saved, skipping the the VAE encoding process saves memory when training MuseControlLite
         audio_full_path = os.path.join(self.audio_data_root, audio_path)
@@ -208,7 +208,7 @@ class MelodyEncoder(nn.Module):
 class dynamics_extractor(nn.Module):
     def __init__(self):
         super(dynamics_extractor, self).__init__()
-        self.conv1d_1 = nn.Conv1d(1, 16, kernel_size=3, padding=1, stride=2)  
+        self.conv1d_1 = nn.Conv1d(2, 16, kernel_size=3, padding=1, stride=2)  
         self.conv1d_2 = nn.Conv1d(16, 16, kernel_size=3, padding=1)  
         self.conv1d_3 = nn.Conv1d(16, 128, kernel_size=3, padding=1, stride=2)
         self.conv1d_4 = nn.Conv1d(128, 128, kernel_size=3, padding=1)
@@ -258,7 +258,7 @@ def log_validation(val_dataloader, condition_extractors, condition_type, pipelin
             break
         pipeline.transformer.eval()  # Set the transformer to evaluation mode
         prompt_texts = batch["prompt_texts"]
-        dynamics_condition = batch["dynamics_condition"].unsqueeze(1)
+        dynamics_condition = batch["dynamics_condition"]
         rhythm_condition = batch["rhythm_condition"]
         melody_condition = batch["melody_condition"]
         audio_full_path = batch["audio_full_path"]
@@ -652,7 +652,7 @@ def main():
                 else:
                     targets = noise  # For epsilon, the target is just the noise
                 prompt_texts = batch["prompt_texts"]
-                dynamics_condition = batch["dynamics_condition"].unsqueeze(1)
+                dynamics_condition = batch["dynamics_condition"]
                 extracted_dynamics_condition = condition_extractors["dynamics"](dynamics_condition.float())
                 rhythm_condition = batch["rhythm_condition"]
                 extracted_rhythm_condition = condition_extractors["rhythm"](rhythm_condition.float())

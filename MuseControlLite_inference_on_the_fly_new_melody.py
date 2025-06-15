@@ -8,7 +8,7 @@ from MuseControlLite_attn_processor import (
 )
 import torch.nn as nn
 import torch.nn.functional as F
-from MuseControlLite_train_melody_only import melody_extractor_full
+from MuseControlLite_train_new_melody import MelodyEncoder
 from safetensors.torch import load_file  # Import safetensors
 import os
 import numpy as np
@@ -67,7 +67,7 @@ def main(config):
     score_rhythm = []
     score_melody = []
     if config["apadapter"]:
-        melody_conditoner = melody_extractor_full().cuda().float()
+        melody_conditoner = MelodyEncoder().cuda().float()
         condition_extractors["melody"] = melody_conditoner
         melody_conditoner.eval()
         for conditioner_type, ckpt_path in config["extractor_ckpt_melody"].items():
@@ -157,7 +157,7 @@ def main(config):
                 if "melody" in config["condition_type"]:
                     melody_condition = compute_melody_v2(audio_file)
                     melody_condition = torch.from_numpy(melody_condition).cuda().unsqueeze(0)
-                    print("melody_condition", melody_condition.shape)
+                    print("melody_condition", melody_condition)
                     extracted_melody_condition = condition_extractors["melody"](melody_condition)
                     masked_extracted_melody_condition = torch.zeros_like(extracted_melody_condition)
                     extracted_melody_condition = F.interpolate(extracted_melody_condition, size=1024, mode='linear', align_corners=False)

@@ -2,7 +2,7 @@ def get_config():
     return {
         "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./5_28_missing/Basic",
+        "output_dir": "./generated_audio/new_melody_70000",
 
         "meta_data_path": "./SDD_nosinging_full.json",
 
@@ -23,10 +23,10 @@ def get_config():
 
         # Checkpoints (adapters and extractors): For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/Melody_only_basic/checkpoint-70000/model_1.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/Melody_new_no_extractor/checkpoint-70000/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/Melody_only_basic/checkpoint-70000/model.safetensors",
+            "melody": "./checkpoints/Melody_new_no_extractor/checkpoint-70000/model.safetensors",
         },
         ###############
 
@@ -82,8 +82,8 @@ def get_config():
         ],
 
         "text": [
-                # "",
-                # "",
+                "",
+                "A string ensemble opens the track with legato, melancholic melodies. The violins and violas play beautifully, while the cellos and bass provide harmonic support for the moving passages. The overall feel is deeply melancholic, with an emotionally stirring performance that remains harmonious and a sense of clearness.",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",

@@ -6,11 +6,11 @@ def get_config():
 
         "meta_data_path": "./ALL_condition_wo_SDD.json",
 
-        "audio_data_dir": "/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s",
+        "audio_data_dir": "../mtg_full_47s",
 
-        "audio_codec_root": "/mnt/gestalt/home/fundwotsai/mtg_47/mtg_full_47s_codec",
+        "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/ALL_new_melody",
+        "output_dir": "./checkpoints/ALL_new_melody_dynamics",
 
         "transformer_ckpt": None, #"./checkpoints/stable_audio_new_fast_audio_v2/checkpoint-21000/model.safetensors",
 
@@ -20,12 +20,12 @@ def get_config():
             # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
 
-        "wand_run_name": "ALL_new_melody",
+        "wand_run_name": "ALL_new_melody_dynamics",
 
         # training hyperparameters
-        "GPU_id" : "0",
+        "GPU_id" : "2",
 
-        "train_batch_size": 12,
+        "train_batch_size": 16,
 
         "learning_rate": 1e-4,
 
