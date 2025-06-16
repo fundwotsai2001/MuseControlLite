@@ -25,7 +25,7 @@ huggingface-cli login
 ## Inference
 All the hyper-parameters could be found in `config_inference.py`, we provide detailed comments as guidance, especially, you can use any combination for `"condition_type"`. Run:
 ```
-MuseControlLite_inference_on_the_fly_all_together.py
+python MuseControlLite_inference_on_the_fly_all_together.py
 ```
 If you only need melody condition, simply set `"condition_type": ["melody"]` in `config_inference.py` and run:
 ```
