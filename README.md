@@ -9,8 +9,8 @@ git clone https://github.com/fundwotsai2001/MuseControlLite_v2.git
 cd MuseControlLite_v2
 
 ## Install environment
-conda create -n stable-audio python=3.11
-conda activate stable-audio
+conda create -n MuseControlLite python=3.11
+conda activate MuseControlLite
 pip install -r requirements.txt
 sudo apt install ffmpeg # For Linux
 
