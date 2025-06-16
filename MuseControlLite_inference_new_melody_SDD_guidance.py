@@ -217,6 +217,9 @@ def main(config):
         musical_attribute_mask_end = int(config["musical_attribute_mask_end_seconds"] / total_seconds * 1024)
     guidance = [0.5, 1.0, 1.5, 2.0, 3.0, 5.0, 7.0]
     for g in guidance:
+        score_dynamics = []
+        score_rhythm = []
+        score_melody = []
         output_dir = config["output_dir"] + f"text_{config['guidance_scale_text']}_con_{g}_{'_'.join(config['condition_type'])}_{config['sigma_min']}_{config['sigma_max']}_step{config['denoise_step']}"
         os.makedirs(output_dir, exist_ok=True)
         with torch.no_grad():
