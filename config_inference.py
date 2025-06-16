@@ -2,11 +2,11 @@ def get_config():
     return {
         "condition_type": ["melody"], # options: "dynamics", "rhythm", "melody", "audio"
 
-        "output_dir": "./generated_audio/new_melody_70000",
+        "output_dir": "./6_16/new_melody_70000_test_guidance",
 
         "meta_data_path": "./SDD_nosinging_full.json",
 
-        "audio_data_dir": "./SDD_nosinging_audio_conditions/SDD_audio",
+        "audio_data_dir": "./SDD_nosinging/SDD_audio",
 
         # Checkpoints (adapters and extractors): You can choose any combinations you like. 
         ###############
@@ -23,10 +23,10 @@ def get_config():
 
         # Checkpoints (adapters and extractors): For melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/Melody_new_no_extractor/checkpoint-70000/model_1.safetensors",
+        "transformer_ckpt_melody": "./checkpoints/70000_Melody_stereo/model_1.safetensors",
 
         "extractor_ckpt_melody": {
-            "melody": "./checkpoints/Melody_new_no_extractor/checkpoint-70000/model.safetensors",
+            "melody": "./checkpoints/70000_Melody_stereo/model.safetensors",
         },
         ###############
 
@@ -40,7 +40,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
         "denoise_step": 50,
 

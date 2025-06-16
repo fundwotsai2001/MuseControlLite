@@ -9,5 +9,6 @@ not_using
 *.wav
 *.txt
 testing
-SDD_nosinging_audio_conditions
+SDD_nosinging
 diffusers
+camera_ready_6_1
