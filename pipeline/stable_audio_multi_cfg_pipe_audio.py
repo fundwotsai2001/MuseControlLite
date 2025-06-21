@@ -600,8 +600,8 @@ class StableAudioPipeline(DiffusionPipeline):
 
         waveform_start = int(audio_start_in_s * self.vae.config.sampling_rate)
         waveform_end = int(audio_end_in_s * self.vae.config.sampling_rate)
-        # waveform_length = int(self.transformer.config.sample_size) #  * audio_end_in_s / 47.554
-        waveform_length = 646
+        waveform_length = int(self.transformer.config.sample_size) #  * audio_end_in_s / 47.554
+        # waveform_length = 646
         # 1. Check inputs. Raise error if not correct
         self.check_inputs(
             prompt,
@@ -743,6 +743,7 @@ class StableAudioPipeline(DiffusionPipeline):
                     noise_pred_uncond, noise_pred_text, noise_pred_both, noise_pred_both_audio = noise_pred.chunk(4)
                     noise_pred = noise_pred_uncond + guidance_scale_text * (noise_pred_text - noise_pred_uncond) + guidance_scale_con * (noise_pred_both - noise_pred_text) \
                     + guidance_scale_audio * (noise_pred_both_audio - noise_pred_both)
+                # print("guidance_scale_audio", guidance_scale_audio)
                 # if do_classifier_free_guidance:
                 #     noise_pred_uncond, noise_pred_text, noise_pred_both, noise_pred_both_audio = noise_pred.chunk(4)
                 #     noise_pred_uncond_no_mask, noise_pred_text_no_mask, noise_pred_both_no_mask, noise_pred_both_audio_no_mask = noise_pred_uncond[:,:,:323], noise_pred_text[:,:,:323], noise_pred_both[:,:,:323], noise_pred_both_audio[:,:,:323]

@@ -1,10 +1,43 @@
 import math
 import random
 import torch
-
 from torch import nn
 from typing import Tuple
+import torchaudio
+import torch.nn.functional as F
+from torchaudio import transforms as T
 
+def load_audio_file(filename, target_sr=44100, target_samples=2097152):
+    try:
+        audio, in_sr = torchaudio.load(filename)    
+        # Resample if necessary
+        if in_sr != target_sr:
+            resampler = T.Resample(in_sr, target_sr)
+            audio = resampler(audio)
+        augs = torch.nn.Sequential(
+            PhaseFlipper(),
+        )
+        audio = augs(audio)
+        audio = audio.clamp(-1, 1)
+        encoding = torch.nn.Sequential(
+            Stereo(),
+        )
+        audio = encoding(audio)
+        # audio.shape is [channels, samples]
+        num_samples = audio.shape[-1]
+
+        if num_samples < target_samples:
+            # Pad if it's too short
+            pad_amount = target_samples - num_samples
+            # Zero-pad at the end (or randomly if you prefer)
+            audio = F.pad(audio, (0, pad_amount)) 
+            print(f"pad {pad_amount}")
+        else:
+            audio = audio[:, :target_samples]
+        return audio
+    except RuntimeError:
+        print(f"Failed to decode audio file: {filename}")
+        return None
 class PadCrop(nn.Module):
     def __init__(self, n_samples, randomize=True):
         super().__init__()

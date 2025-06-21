@@ -37,6 +37,7 @@ from diffusers.loaders import AttnProcsLayers
 from MuseControlLite_attn_processor import (
     StableAudioAttnProcessor2_0,
     StableAudioAttnProcessor2_0_rotary,
+    StableAudioAttnProcessor2_0_rotary_double,
 )
 from utils.extract_conditions import compute_dynamics, extract_melody_one_hot, evaluate_f1_rhythm
 from sklearn.metrics import f1_score
@@ -344,9 +345,6 @@ def main():
     processor_classes = {
         "rotary": StableAudioAttnProcessor2_0_rotary,
         "rotary_double": StableAudioAttnProcessor2_0_rotary_double,
-        "no_rotary": StableAudioAttnProcessor2_0_no_rotary,
-        "no_cnn": StableAudioAttnProcessor2_0_rotary_no_cnn,
-        "scale_up": StableAudioAttnProcessor2_0_rotary_scale_up,
     }
     print(config["attn_processor_type"])
     # Get the processor classes based on the type

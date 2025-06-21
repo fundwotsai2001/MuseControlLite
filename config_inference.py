@@ -1,14 +1,14 @@
 def get_config():
     return {
-        "condition_type": ["audio"], # options: "dynamics", "rhythm", "melody", "audio". You can choose any combinations you like
+        "condition_type": ["audio", "dynamics"], #  you can choose any combivations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
 
-        "output_dir": "./generated_audio/audio_only",
+        "output_dir": "./generated_audio/test",
 
         # Works for all combinations
         ###############
-        "transformer_ckpt": "./checkpoints/woSDD-all/model_3.safetensors",
+        "transformer_ckpt_musical": "./checkpoints/woSDD-all/model_3.safetensors",
         
-        "extractor_ckpt": {
+        "extractor_ckpt_musical": {
             "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
             "melody": "./checkpoints/woSDD-all/model.safetensors",
             "rhythm": "./checkpoints/woSDD-all/model_2.safetensors",
@@ -19,12 +19,21 @@ def get_config():
         #################
         "audio_transformer_ckpt": "./checkpoints/70000_Audio/model.safetensors",
 
-        # For melody only.
+        # For stereo melody only.
         ###############
-        "transformer_ckpt_melody": "./checkpoints/70000_Melody_stereo/model_1.safetensors",
+        "transformer_ckpt_melody_stero": "./checkpoints/70000_Melody_stereo/model_1.safetensors",
 
-        "extractor_ckpt_melody": {
+        "extractor_ckpt_melody_stero": {
             "melody": "./checkpoints/70000_Melody_stereo/model.safetensors",
+        },
+        ###############
+
+        # For mono melody only.
+        ###############
+        "transformer_ckpt_melody_mono": "./checkpoints/40000_Melody_mono/model_1.safetensors",
+
+        "extractor_ckpt_melody_mono": {
+            "melody": "./checkpoints/40000_Melody_mono/model.safetensors",
         },
         ###############
 
@@ -40,20 +49,17 @@ def get_config():
 
         "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
-        "guidance_scale_audio": 1.0,
+        "guidance_scale_audio": 0.5,
         
-        "denoise_step": 100,
+        "denoise_step": 50,
 
         "sigma_min": 0.3, # sigma_min and sigma_max are for the scheduler.
 
         "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
 
-        "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
+        "weight_dtype": "fp16", # fp16 and fp32 sounds quiet the same.
 
         "negative_text_prompt": "Low qualiy, noise",
-
-        # The below two mask should complementary, which means every time slice shouldn't receive both audio and music attribute condition.
-        # Don't set both use_audio_mask and use_musical_attribute_mask to True.
 
         ###############
         "use_audio_mask": True,
@@ -70,6 +76,8 @@ def get_config():
         ###############
 
         "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
+
+        "show_result_and_plt": True,
 
         "audio_files": [
             "./melody_condition_audio/49_piano.mp3",

@@ -188,107 +188,108 @@ def main(config):
                 audio = load_audio_file(audio_file)
                 original_audio = audio.T.float().cpu().numpy()
                 sf.write(original_path, original_audio, pipe.vae.sampling_rate)
-                dynamics_condition = compute_dynamics(audio_file)
-                gen_dynamics = compute_dynamics(gen_file_path)
-                min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
-                pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
-                print("pearson_corr", pearson_corr)
-                score_dynamics.append(pearson_corr)
-                melody_condition = extract_melody_one_hot(audio_file)      
-                gen_melody = extract_melody_one_hot(gen_file_path)
-                min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
-                matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
-                accuracy = matches / min_len_melody
-                score_melody.append(accuracy)
-                print("melody accuracy", accuracy)
-                # Adjust layout to avoid overlap
-                processor = RNNDownBeatProcessor()
-                input_probabilities = processor(audio_file)
-                generated_probabilities = processor(gen_file_path)
-                hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
-                input_timestamps = hmm_processor(input_probabilities)
-                generated_timestamps = hmm_processor(generated_probabilities)
-                precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
-                # Output results
-                print(f"F1 Score: {f1:.2f}")
-                score_rhythm.append(f1)
-                # Plotting
-                frame_rate = 100  # Frames per second
-                input_time_axis = np.linspace(0, len(input_probabilities) / frame_rate, len(input_probabilities))
-                generate_time_axis = np.linspace(0, len(generated_probabilities) / frame_rate, len(generated_probabilities))
-                fig, axes = plt.subplots(2, 3, figsize=(18, 10))  # Adjust figsize as needed
+                if config['show_result_and_plt']:
+                    dynamics_condition = compute_dynamics(audio_file)
+                    gen_dynamics = compute_dynamics(gen_file_path)
+                    min_len_dynamics = min(gen_dynamics.shape[0], dynamics_condition.shape[0])
+                    pearson_corr = np.corrcoef(gen_dynamics[:min_len_dynamics], dynamics_condition[:min_len_dynamics])[0, 1]
+                    print("pearson_corr", pearson_corr)
+                    score_dynamics.append(pearson_corr)
+                    melody_condition = extract_melody_one_hot(audio_file)      
+                    gen_melody = extract_melody_one_hot(gen_file_path)
+                    min_len_melody = min(gen_melody.shape[1], melody_condition.shape[1])
+                    matches = ((gen_melody[:, :min_len_melody] == melody_condition[:, :min_len_melody]) & (gen_melody[:, :min_len_melody] == 1)).sum()
+                    accuracy = matches / min_len_melody
+                    score_melody.append(accuracy)
+                    print("melody accuracy", accuracy)
+                    # Adjust layout to avoid overlap
+                    processor = RNNDownBeatProcessor()
+                    input_probabilities = processor(audio_file)
+                    generated_probabilities = processor(gen_file_path)
+                    hmm_processor = DBNDownBeatTrackingProcessor(beats_per_bar=[3,4], fps=100)
+                    input_timestamps = hmm_processor(input_probabilities)
+                    generated_timestamps = hmm_processor(generated_probabilities)
+                    precision, recall, f1 = evaluate_f1_rhythm(input_timestamps, generated_timestamps)
+                    # Output results
+                    print(f"F1 Score: {f1:.2f}")
+                    score_rhythm.append(f1)
+                    # Plotting
+                    frame_rate = 100  # Frames per second
+                    input_time_axis = np.linspace(0, len(input_probabilities) / frame_rate, len(input_probabilities))
+                    generate_time_axis = np.linspace(0, len(generated_probabilities) / frame_rate, len(generated_probabilities))
+                    fig, axes = plt.subplots(2, 3, figsize=(18, 10))  # Adjust figsize as needed
 
-                # ----------------------------
-                # Subplot (0,0): Dynamics Plot
-                ax = axes[0, 0]
-                ax.plot(dynamics_condition[:min_len_dynamics].squeeze(), linewidth=1, label='Dynamics condition')
-                ax.set_title('Dynamics')
-                ax.set_xlabel('Time Frame')
-                ax.set_ylabel('Dynamics (dB)')
-                ax.legend(fontsize=8)
-                ax.grid(True)
-                # ----------------------------
-                # Subplot (0,0): Dynamics Plot
-                ax = axes[1, 0]
-                ax.plot(gen_dynamics[:min_len_dynamics].squeeze(), linewidth=1, label='Generated Dynamics')
-                ax.set_title('Dynamics')
-                ax.set_xlabel('Time Frame')
-                ax.set_ylabel('Dynamics (dB)')
-                ax.legend(fontsize=8)
-                ax.grid(True)
+                    # ----------------------------
+                    # Subplot (0,0): Dynamics Plot
+                    ax = axes[0, 0]
+                    ax.plot(dynamics_condition[:min_len_dynamics].squeeze(), linewidth=1, label='Dynamics condition')
+                    ax.set_title('Dynamics')
+                    ax.set_xlabel('Time Frame')
+                    ax.set_ylabel('Dynamics (dB)')
+                    ax.legend(fontsize=8)
+                    ax.grid(True)
+                    # ----------------------------
+                    # Subplot (0,0): Dynamics Plot
+                    ax = axes[1, 0]
+                    ax.plot(gen_dynamics[:min_len_dynamics].squeeze(), linewidth=1, label='Generated Dynamics')
+                    ax.set_title('Dynamics')
+                    ax.set_xlabel('Time Frame')
+                    ax.set_ylabel('Dynamics (dB)')
+                    ax.legend(fontsize=8)
+                    ax.grid(True)
 
-                # ----------------------------
-                # Subplot (0,2): Melody Condition (Chromagram)
-                ax = axes[0, 1]
-                im2 = ax.imshow(melody_condition[:, :min_len_melody], aspect='auto', origin='lower',
-                                interpolation='nearest', cmap='plasma')
-                ax.set_title('Melody Condition')
-                ax.set_xlabel('Time')
-                ax.set_ylabel('Chroma Features')
+                    # ----------------------------
+                    # Subplot (0,2): Melody Condition (Chromagram)
+                    ax = axes[0, 1]
+                    im2 = ax.imshow(melody_condition[:, :min_len_melody], aspect='auto', origin='lower',
+                                    interpolation='nearest', cmap='plasma')
+                    ax.set_title('Melody Condition')
+                    ax.set_xlabel('Time')
+                    ax.set_ylabel('Chroma Features')
 
-                # ----------------------------
-                # Subplot (0,1): Generated Melody (Chromagram)
-                ax = axes[1, 1]
-                im1 = ax.imshow(gen_melody[:, :min_len_melody], aspect='auto', origin='lower',
-                                interpolation='nearest', cmap='viridis')
-                ax.set_title('Generated Melody')
-                ax.set_xlabel('Time')
-                ax.set_ylabel('Chroma Features')
+                    # ----------------------------
+                    # Subplot (0,1): Generated Melody (Chromagram)
+                    ax = axes[1, 1]
+                    im1 = ax.imshow(gen_melody[:, :min_len_melody], aspect='auto', origin='lower',
+                                    interpolation='nearest', cmap='viridis')
+                    ax.set_title('Generated Melody')
+                    ax.set_xlabel('Time')
+                    ax.set_ylabel('Chroma Features')
 
-                # ----------------------------
-                # Subplot (1,0): Rhythm Input Probabilities
-                ax = axes[0, 2]
-                ax.plot(input_time_axis, input_probabilities,
-                        label="Input Beat Probability")
-                ax.plot(input_time_axis, input_probabilities,
-                        label="Input Downbeat Probability", alpha=0.8)
-                ax.set_title('Rhythm: Input')
-                ax.set_xlabel('Time (s)')
-                ax.set_ylabel('Probability')
-                ax.legend()
-                ax.grid(True)
+                    # ----------------------------
+                    # Subplot (1,0): Rhythm Input Probabilities
+                    ax = axes[0, 2]
+                    ax.plot(input_time_axis, input_probabilities,
+                            label="Input Beat Probability")
+                    ax.plot(input_time_axis, input_probabilities,
+                            label="Input Downbeat Probability", alpha=0.8)
+                    ax.set_title('Rhythm: Input')
+                    ax.set_xlabel('Time (s)')
+                    ax.set_ylabel('Probability')
+                    ax.legend()
+                    ax.grid(True)
 
-                # ----------------------------
-                # Subplot (1,1): Rhythm Generated Probabilities
-                ax = axes[1, 2]
-                ax.plot(generate_time_axis, generated_probabilities,
-                        color='orange', label="Generated Beat Probability")
-                ax.plot(generate_time_axis, generated_probabilities,
-                        alpha=0.8, color='red', label="Generated Downbeat Probability")
-                ax.set_title('Rhythm: Generated')
-                ax.set_xlabel('Time (s)')
-                ax.set_ylabel('Probability')
-                ax.legend()
-                ax.grid(True)
+                    # ----------------------------
+                    # Subplot (1,1): Rhythm Generated Probabilities
+                    ax = axes[1, 2]
+                    ax.plot(generate_time_axis, generated_probabilities,
+                            color='orange', label="Generated Beat Probability")
+                    ax.plot(generate_time_axis, generated_probabilities,
+                            alpha=0.8, color='red', label="Generated Downbeat Probability")
+                    ax.set_title('Rhythm: Generated')
+                    ax.set_xlabel('Time (s)')
+                    ax.set_ylabel('Probability')
+                    ax.legend()
+                    ax.grid(True)
 
 
-                # Adjust layout and save the combined image
-                plt.tight_layout()
-                combined_path = os.path.join(output_dir, f"combined_{i}.png")
-                plt.savefig(combined_path)
-                plt.close()
+                    # Adjust layout and save the combined image
+                    plt.tight_layout()
+                    combined_path = os.path.join(output_dir, f"combined_{i}.png")
+                    plt.savefig(combined_path)
+                    plt.close()
 
-                print(f"Combined plot saved to {combined_path}")   
+                    print(f"Combined plot saved to {combined_path}")   
             else:
                 audio = pipe(
                     prompt=prompt_texts,
