@@ -1,6 +1,6 @@
 def get_config():
     return {
-        "condition_type": ["audio", "dynamics"], #  you can choose any combivations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
+        "condition_type": ["melody_stereo"], #  you can choose any combivations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
 
         "output_dir": "./generated_audio/test",
 
@@ -39,17 +39,15 @@ def get_config():
 
         "GPU_id": "0",
 
-        "attn_processor_type": "rotary", 
-
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
 
         "ap_scale": 1.0, # recommend 1.0 for MuseControlLite, other values are not tested
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
-        "guidance_scale_audio": 0.5,
+        "guidance_scale_audio": 1.0,
         
         "denoise_step": 50,
 

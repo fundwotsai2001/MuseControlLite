@@ -34,7 +34,7 @@ import torch
 import soundfile as sf
 from pipeline.stable_audio_multi_cfg_pipe import StableAudioPipeline
 from diffusers.loaders import AttnProcsLayers
-from MuseControlLite_attn_processor import (
+from MuseControlLite_setup import (
     StableAudioAttnProcessor2_0,
     StableAudioAttnProcessor2_0_rotary,
     StableAudioAttnProcessor2_0_rotary_double,
