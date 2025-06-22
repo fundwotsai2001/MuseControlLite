@@ -65,6 +65,11 @@ def get_config():
                 ],
 
         ########## adapters avilable ############
+        # We trained 4 set of adapters:
+        # 1. with conditions ["melody_mono", "dynamics", "rhythm"]
+        # 2. with conditions ["melody_mono"]
+        # 3. with conditions ["melody_stereo"]
+        # 3. with conditions ["audio"]
         # MuseControlLite_inference_all.py will automaticaly choose the most suitable model according to the condition type:
         ###############
         # Works for condition ["dynamics", "rhythm", "melody_mono"]

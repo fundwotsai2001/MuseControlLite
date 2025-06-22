@@ -12,11 +12,11 @@ def get_config():
 
         "output_dir": "./checkpoints/stable_audio_melody_wo_SDD",
 
-        "transformer_ckpt": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model_1.safetensors",
+        "transformer_ckpt": None, #"./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model_1.safetensors",
 
         "extractor_ckpt": {
             # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
-            "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model.safetensors",
+            # "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model.safetensors",
             # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
         },
 
@@ -25,7 +25,7 @@ def get_config():
         # training hyperparameters
         "GPU_id" : "0",
 
-        "train_batch_size": 16,
+        "train_batch_size": 8,
 
         "learning_rate": 1e-4,
 
@@ -56,7 +56,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.5, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
 
         "checkpointing_steps": 500,
 
@@ -64,7 +64,7 @@ def get_config():
 
         "denoise_step": 50,
 
-        "log_first": True,
+        "log_first": False,
 
         "sigma_min": 0.3,
 
