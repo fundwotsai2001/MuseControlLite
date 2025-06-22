@@ -4,39 +4,6 @@ def get_config():
 
         "output_dir": "./generated_audio/test",
 
-        # Works for all combinations
-        ###############
-        "transformer_ckpt_musical": "./checkpoints/woSDD-all/model_3.safetensors",
-        
-        "extractor_ckpt_musical": {
-            "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
-            "melody": "./checkpoints/woSDD-all/model.safetensors",
-            "rhythm": "./checkpoints/woSDD-all/model_2.safetensors",
-        },
-        ###############
-
-        # When using audio only, do not need extractor
-        #################
-        "audio_transformer_ckpt": "./checkpoints/70000_Audio/model.safetensors",
-
-        # For stereo melody only.
-        ###############
-        "transformer_ckpt_melody_stero": "./checkpoints/70000_Melody_stereo/model_1.safetensors",
-
-        "extractor_ckpt_melody_stero": {
-            "melody": "./checkpoints/70000_Melody_stereo/model.safetensors",
-        },
-        ###############
-
-        # For mono melody only.
-        ###############
-        "transformer_ckpt_melody_mono": "./checkpoints/40000_Melody_mono/model_1.safetensors",
-
-        "extractor_ckpt_melody_mono": {
-            "melody": "./checkpoints/40000_Melody_mono/model.safetensors",
-        },
-        ###############
-
         "GPU_id": "0",
 
         "apadapter": True, # True for MuseControlLite, False for original Stable-audio
@@ -45,7 +12,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.5, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
         
         "guidance_scale_audio": 1.0,
         
@@ -60,7 +27,7 @@ def get_config():
         "negative_text_prompt": "Low qualiy, noise",
 
         ###############
-        "use_audio_mask": True,
+        "use_audio_mask": True, # Turn true to mask a portion of audio, enabling audio inpainting and outpainting. This will be automaticaly set to true if given both audio and musical attribute conditions
 
         "audio_mask_start_seconds": 24,
 
@@ -88,8 +55,6 @@ def get_config():
         ],
 
         "text": [
-                # "a recording of a piano",
-                # "a recording of a piano",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",
@@ -97,5 +62,40 @@ def get_config():
                 "Hopeful instrumental with guitar being the lead and tabla used for percussion in the middle giving a feeling of going somewhere with positive outlook.",
                 "A string ensemble opens the track with legato, melancholic melodies. The violins and violas play beautifully, while the cellos and bass provide harmonic support for the moving passages. The overall feel is deeply melancholic, with an emotionally stirring performance that remains harmonious and a sense of clearness.",
                 "An exceptionally harmonious string performance with a lively tempo in the first half, transitioning to a gentle and beautiful melody in the second half. It creates a warm and comforting atmosphere, featuring cellos and bass providing a solid foundation, while violins and violas showcase the main theme, all without any noise, resulting in a cohesive and serene sound.",
-                ]
+                ],
+
+        ########## adapters avilable ############
+        # MuseControlLite_inference_all.py will automaticaly choose the most suitable model according to the condition type:
+        ###############
+        # Works for condition ["dynamics", "rhythm", "melody_mono"]
+        "transformer_ckpt_musical": "./checkpoints/woSDD-all/model_3.safetensors",
+        
+        "extractor_ckpt_musical": {
+            "dynamics": "./checkpoints/woSDD-all/model_1.safetensors",
+            "melody": "./checkpoints/woSDD-all/model.safetensors",
+            "rhythm": "./checkpoints/woSDD-all/model_2.safetensors",
+        },
+        ###############
+
+        # Works for ['audio], it works without a feature extractor, and could cooperate with other adapters
+        #################
+        "audio_transformer_ckpt": "./checkpoints/70000_Audio/model.safetensors",
+
+        # Specialized for ['melody_stereo']
+        ###############
+        "transformer_ckpt_melody_stero": "./checkpoints/70000_Melody_stereo/model_1.safetensors",
+
+        "extractor_ckpt_melody_stero": {
+            "melody": "./checkpoints/70000_Melody_stereo/model.safetensors",
+        },
+        ###############
+
+        # Specialized for ['melody_mono']
+        ###############
+        "transformer_ckpt_melody_mono": "./checkpoints/40000_Melody_mono/model_1.safetensors",
+
+        "extractor_ckpt_melody_mono": {
+            "melody": "./checkpoints/40000_Melody_mono/model.safetensors",
+        },
+        ###############
     }
