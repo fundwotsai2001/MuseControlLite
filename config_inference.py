@@ -42,7 +42,7 @@ def get_config():
 
         "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
 
-        "show_result_and_plt": True,
+        "show_result_and_plt": False,
 
         "audio_files": [
             "./melody_condition_audio/49_piano.mp3",
