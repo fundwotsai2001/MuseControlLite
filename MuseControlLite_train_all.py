@@ -46,7 +46,7 @@ from torch.cuda.amp import autocast
 from madmom.features import RNNBeatProcessor, DBNBeatTrackingProcessor
 from madmom.features.downbeats import DBNDownBeatTrackingProcessor,RNNDownBeatProcessor
 ### same way as stable audio loads audio file
-import gc
+# import gc
 torchaudio.set_audio_backend("sox_io")
 import datetime
 import torch.distributed as dist
@@ -771,8 +771,8 @@ def main():
                     optimizer.step()
                     lr_scheduler.step()
                     optimizer.zero_grad()
-                    gc.collect()
-                    torch.cuda.empty_cache()
+                    # gc.collect()
+                    # torch.cuda.empty_cache()
             # Checks if the accelerator has performed an optimization step behind the scenes
             if accelerator.sync_gradients:
                 audios = []

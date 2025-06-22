@@ -10,20 +10,20 @@ def get_config():
 
         "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/ALL_new_melody_dynamics",
+        "output_dir": "./checkpoints/ALL_new_melody_dynamics_v4",
 
-        "transformer_ckpt": None, #"./checkpoints/stable_audio_new_fast_audio_v2/checkpoint-21000/model.safetensors",
+        "transformer_ckpt":"./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_3.safetensors",
 
         "extractor_ckpt": {
-            # "dynamics": "./checkpoints/110000_musical_44000_audio/model_1.safetensors",
-            # "melody": "./checkpoints/stable_audio_melody_wo_SDD/checkpoint-5000/model.safetensors",
-            # "rhythm": "./checkpoints/110000_musical_44000_audio/model_2.safetensors",
+            "dynamics": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_1.safetensors",
+            "melody": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model.safetensors",
+            "rhythm": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_2.safetensors",
         },
 
         "wand_run_name": "ALL_new_melody_dynamics",
 
         # training hyperparameters
-        "GPU_id" : "2",
+        "GPU_id" : "0",
 
         "train_batch_size": 16,
 
@@ -56,7 +56,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
 
         "checkpointing_steps": 500,
 
