@@ -44,7 +44,7 @@ def get_config():
 
         "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
 
-        "show_result_and_plt": True,
+        "show_result_and_plt": False,
 
         "audio_files": [
             "./melody_condition_audio/49_piano.mp3",
@@ -67,6 +67,11 @@ def get_config():
                 ],
 
         ########## adapters avilable ############
+        # We trained 4 set of adapters:
+        # 1. with conditions ["melody_mono", "dynamics", "rhythm"]
+        # 2. with conditions ["melody_mono"]
+        # 3. with conditions ["melody_stereo"]
+        # 3. with conditions ["audio"]
         # MuseControlLite_inference_all.py will automaticaly choose the most suitable model according to the condition type:
         ###############
         # Works for condition ["dynamics", "rhythm", "melody_mono"]
