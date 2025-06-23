@@ -14,3 +14,4 @@ SDD_nosinging
 diffusers
 inference_examples
 stable-audio-tools
+melody_condition_audio _demo

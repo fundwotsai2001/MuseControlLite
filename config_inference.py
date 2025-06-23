@@ -1,8 +1,8 @@
 def get_config():
     return {
-        "condition_type": ["audio"], #  you can choose any combinations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
+        "condition_type": ["melody_stereo"], #  you can choose any combinations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
                                     # When using audio, is recommend to use empty string "" as prompt
-        "output_dir": "./generated_audio/test",
+        "output_dir": "./generated_audio/test32",
 
         "GPU_id": "0",
 
@@ -12,7 +12,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.5, # The separated guidance for Musical attribute condition
+        "guidance_scale_con": 1.0, # The separated guidance for Musical attribute condition
         
         "guidance_scale_audio": 0.5,
         
@@ -22,7 +22,7 @@ def get_config():
 
         "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
 
-        "weight_dtype": "fp16", # fp16 and fp32 sounds quiet the same.
+        "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
 
         "negative_text_prompt": "Low qualiy, noise",
 
@@ -44,13 +44,23 @@ def get_config():
         "show_result_and_plt": False,
 
         "audio_files": [
-            "./melody_condition_audio/785_piano.mp3",
-            "./melody_condition_audio/322_piano.mp3",
-            "./melody_condition_audio/610_bass.mp3",
-            "./melody_condition_audio/785_piano.mp3",
-            "./melody_condition_audio/933_string.mp3",
-            "./melody_condition_audio/57_jazz.mp3",
-            "./melody_condition_audio/703_mideast.mp3"
+            "melody_condition_audio/49_piano.mp3",
+            "melody_condition_audio/49_piano.mp3",
+            "melody_condition_audio/49_piano.mp3",
+            "melody_condition_audio/322_piano.mp3",
+            "melody_condition_audio/322_piano.mp3",
+            "melody_condition_audio/322_piano.mp3",
+            "melody_condition_audio/610_bass.mp3",
+            "melody_condition_audio/610_bass.mp3",
+            "melody_condition_audio/785_piano.mp3",
+            "melody_condition_audio/785_piano.mp3",
+            "melody_condition_audio/933_string.mp3",
+            "melody_condition_audio/933_string.mp3",
+            "melody_condition_audio/6_uke_12.wav",
+            "melody_condition_audio/6_uke_12.wav",
+            "melody_condition_audio/57_jazz.mp3",
+            "melody_condition_audio/703_mideast.mp3",
+
         ],
 
         "text": [
@@ -61,6 +71,15 @@ def get_config():
                 "Hopeful instrumental with guitar being the lead and tabla used for percussion in the middle giving a feeling of going somewhere with positive outlook.",
                 "A string ensemble opens the track with legato, melancholic melodies. The violins and violas play beautifully, while the cellos and bass provide harmonic support for the moving passages. The overall feel is deeply melancholic, with an emotionally stirring performance that remains harmonious and a sense of clearness.",
                 "An exceptionally harmonious string performance with a lively tempo in the first half, transitioning to a gentle and beautiful melody in the second half. It creates a warm and comforting atmosphere, featuring cellos and bass providing a solid foundation, while violins and violas showcase the main theme, all without any noise, resulting in a cohesive and serene sound.",
+                "Pop solo piano instrumental song. Simple harmony and emotional theme. Makes you feel nostalgic and wanting a cup of warm tea sitting on the couch while holding the person you love.",
+                "A whimsical string arrangement with rich layers, featuring violins as the main melody, accompanied by violas and cellos. The light, playful melody blends harmoniously, creating a sense of clarity.",
+                "An instrumental piece primarily featuring acoustic guitar, with a lively and nimble feel. The melody is bright, delivering an overall sense of joy.",
+                "A joyful saxophone performance that is smooth and cohesive, accompanied by cello. The first half features a relaxed tempo, while the second half picks up with an upbeat rhythm, creating a lively and energetic atmosphere. The overall sound is harmonious and clear, evoking feelings of happiness and vitality.",
+                "A cheerful piano performance with a smooth and flowing rhythm, evoking feelings of joy and vitality.",
+                "An instrumental piece primarily featuring piano, with a lively rhythm and cheerful melodies that evoke a sense of joyful childhood playfulness. The melodies are clear and bright.",
+                "fast and fun beat-based indie pop to set a protagonist-gets-good-at-x movie montage to.",
+                "A lively 70s style British pop song featuring drums, electric guitars, and synth violin. The instruments blend harmoniously, creating a dynamic, clean sound without any noise or clutter.",
+                "A soothing acoustic guitar song that evokes nostalgia, featuring intricate fingerpicking. The melody is both sacred and mysterious, with a rich texture."
                 ],
 
         ########## adapters avilable ############

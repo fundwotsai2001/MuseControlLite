@@ -751,7 +751,7 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
     total_seconds = 2097152/44100
     use_audio_mask = False
     use_musical_attribute_mask = False
-    if (config["audio_mask_start_seconds"] and config["audio_mask_end_seconds"]) != 0:
+    if (config["audio_mask_start_seconds"] and config["audio_mask_end_seconds"]) != 0 and "audio" in config["condition_type"]:
         use_audio_mask = True
         audio_mask_start = int(config["audio_mask_start_seconds"] / total_seconds * 1024) # 1024 is the latent length for 2097152/44100 seconds
         audio_mask_end = int(config["audio_mask_end_seconds"] / total_seconds * 1024)
@@ -857,7 +857,7 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
         final_condition[:,audio_mask_end:,:] = 0
         if 'final_condition_audio' in locals() and final_condition_audio is not None:
             final_condition_audio[:,audio_mask_start:audio_mask_end,:] = 0
-    elif config['use_musical_attribute_mask'] and use_musical_attribute_mask:
+    elif use_musical_attribute_mask:
         final_condition[:,musical_attribute_mask_start:musical_attribute_mask_end,:] = 0
         if 'final_condition_audio' in locals() and final_condition_audio is not None:
             final_condition_audio[:,:musical_attribute_mask_start,:] = 0

@@ -3,7 +3,7 @@
 This is the official implementation of MuseControlLite (ICML2025).
 [paper]() | [demo](https://musecontrollite.github.io/web/) | [colab](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3)
 ![Alt Text](Melody_result.png)
-We have updated the results for MuseControlLite-stereo-Melody, which processes the melody of the two audio channels separately and delivers an additional performance boost. By contrast, the results reported in the paper mixed the melody from both channels.
+We have updated the results for MuseControlLite-stereo-Melody, which processes the melody of the two audio channels separately (same as ControlNet) and delivers an additional performance boost, results in **melody acuracy 7.6 % higher then ControlNet**. By contrast, the results reported in the paper mixed the melody from both channels.
 
 ## Todo (updated 6/23)
 - [x] [Colab impementation](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3?usp=sharing) (Thanks to [YianLai0327](https://github.com/YianLai0327))
