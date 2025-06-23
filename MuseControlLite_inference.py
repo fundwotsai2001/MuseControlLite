@@ -37,12 +37,12 @@ def main(config):
         for i, prompt_texts in enumerate(config['text']):
             if config["apadapter"]:
                 audio_file = config["audio_files"][i]
-                if config["no_text"] is True:
-                    prompt_texts = ""
                 description_path = os.path.join(output_dir, "description.txt")
                 with open(description_path, 'a') as file:
                     file.write(f'{prompt_texts}\n')
                 final_condition, final_condition_audio = process_musical_conditions(config, audio_file, condition_extractors, output_dir, i, weight_dtype, MuseControlLite)
+                if config["no_text"] is True:
+                    prompt_texts = ""
                 waveform = MuseControlLite(
                     extracted_condition=final_condition, 
                     extracted_condition_audio=final_condition_audio,

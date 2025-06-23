@@ -522,7 +522,6 @@ def setup_MuseControlLite(config, weight_dtype, transformer_ckpt):
         from pipeline.stable_audio_multi_cfg_pipe_audio import StableAudioPipeline
         attn_processor = StableAudioAttnProcessor2_0_rotary_double
         audio_state_dict = load_file(config["audio_transformer_ckpt"], device="cpu")
-        config['no_text'] = True
     else:
         from pipeline.stable_audio_multi_cfg_pipe import StableAudioPipeline
         attn_processor = StableAudioAttnProcessor2_0_rotary

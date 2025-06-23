@@ -1,7 +1,7 @@
 def get_config():
     return {
-        "condition_type": ["melody_stereo", "audio"], #  you can choose any combinations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
-
+        "condition_type": ["audio"], #  you can choose any combinations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
+                                    # When using audio, is recommend to use empty string "" as prompt
         "output_dir": "./generated_audio/test",
 
         "GPU_id": "0",
@@ -12,7 +12,7 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 2.0, # The separated guidance for Musical attribute condition
+        "guidance_scale_con": 1.5, # The separated guidance for Musical attribute condition
         
         "guidance_scale_audio": 0.5,
         
@@ -27,15 +27,12 @@ def get_config():
         "negative_text_prompt": "Low qualiy, noise",
 
         ###############
-        "use_audio_mask": True, # Turn true to mask a portion of audio, enabling audio inpainting and outpainting. This will be automaticaly set to true if given both audio and musical attribute conditions
 
-        "audio_mask_start_seconds": 24,
+        "audio_mask_start_seconds": 24, # Apply mask to musical attributes choose only one mask to use, it automatically generates a complemetary mask to the other condition
 
-        "audio_mask_end_seconds": 2097152 / 44100, # Maximum duration for stable-audio is 2097152 / 44100 seconds
+        "audio_mask_end_seconds": 50, 
 
-        "use_musical_attribute_mask": False, # Set to true, if you want to mask melody, rhythm, dynamics.
-
-        "musical_attribute_mask_start_seconds": 0,
+        "musical_attribute_mask_start_seconds": 0, # 'Apply mask to audio condition, choose only one mask to use, it automatically generates a complemetary mask to the other condition'
 
         "musical_attribute_mask_end_seconds": 0,
 
@@ -47,7 +44,7 @@ def get_config():
         "show_result_and_plt": False,
 
         "audio_files": [
-            "./melody_condition_audio/49_piano.mp3",
+            "./melody_condition_audio/785_piano.mp3",
             "./melody_condition_audio/322_piano.mp3",
             "./melody_condition_audio/610_bass.mp3",
             "./melody_condition_audio/785_piano.mp3",
