@@ -750,10 +750,16 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
         tuple: (final_condition, extracted_condition, final_condition_audio)
     """
     total_seconds = 2097152/44100
-    audio_mask_start = int(config["audio_mask_start_seconds"] / total_seconds * 1024) # 1024 is the latent length for 2097152/44100 seconds
-    audio_mask_end = int(config["audio_mask_end_seconds"] / total_seconds * 1024)
-    musical_attribute_mask_start = int(config["musical_attribute_mask_start_seconds"] / total_seconds * 1024)
-    musical_attribute_mask_end = int(config["musical_attribute_mask_end_seconds"] / total_seconds * 1024)
+    use_audio_mask = False
+    use_musical_attribute_mask = False
+    if (config["audio_mask_start_seconds"] and config["audio_mask_end_seconds"]) is not None:
+        use_audio_mask = True
+        audio_mask_start = int(config["audio_mask_start_seconds"] / total_seconds * 1024) # 1024 is the latent length for 2097152/44100 seconds
+        audio_mask_end = int(config["audio_mask_end_seconds"] / total_seconds * 1024)
+    if (config["musical_attribute_mask_start_seconds"] and config["musical_attribute_mask_end_seconds"]) is not None:
+        use_musical_attribute_mask = True
+        musical_attribute_mask_start = int(config["musical_attribute_mask_start_seconds"] / total_seconds * 1024)
+        musical_attribute_mask_end = int(config["musical_attribute_mask_end_seconds"] / total_seconds * 1024)
     if "dynamics" in config["condition_type"]:
         dynamics_condition = compute_dynamics(audio_file)
         dynamics_condition = torch.from_numpy(dynamics_condition).cuda()
@@ -834,15 +840,15 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
         else:
             final_condition_audio = None
     final_condition = final_condition.transpose(1, 2)
-    if "audio" in config["condition_type"] and len(config["condition_type"])==1 and config['use_audio_mask']:
+    if "audio" in config["condition_type"] and len(config["condition_type"])==1 and use_audio_mask:
         final_condition[:,audio_mask_start:audio_mask_end,:] = 0
         config["guidance_scale_con"] = config["guidance_scale_audio"]
-    elif "audio" in config["condition_type"] and len(config["condition_type"])!=1:
-        final_condition[:,:audio_mask_start,:] = 0
+    elif "audio" in config["condition_type"] and len(config["condition_type"])!=1 and use_audio_mask:
+        final_condition[:,:audio_mask_start + 100,:] = 0
         final_condition[:,audio_mask_end:,:] = 0
         if 'final_condition_audio' in locals() and final_condition_audio is not None:
             final_condition_audio[:,audio_mask_start:audio_mask_end,:] = 0
-    elif config['use_musical_attribute_mask']:
+    elif config['use_musical_attribute_mask'] and use_musical_attribute_mask:
         final_condition[:,musical_attribute_mask_start:musical_attribute_mask_end,:] = 0
     
     return final_condition, final_condition_audio if 'final_condition_audio' in locals() else None

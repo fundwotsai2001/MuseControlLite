@@ -1,6 +1,6 @@
 def get_config():
     return {
-        "condition_type": ["melody_stereo"], #  you can choose any combivations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
+        "condition_type": ["melody_stereo", "audio"], #  you can choose any combinations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
 
         "output_dir": "./generated_audio/test",
 
@@ -12,9 +12,9 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.5, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 2.0, # The separated guidance for Musical attribute condition
         
-        "guidance_scale_audio": 1.0,
+        "guidance_scale_audio": 0.5,
         
         "denoise_step": 50,
 
@@ -38,6 +38,8 @@ def get_config():
         "musical_attribute_mask_start_seconds": 24,
 
         "musical_attribute_mask_end_seconds": 2097152 / 44100 ,
+
+        "buffer_seconds": 3, 
         ###############
 
         "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
