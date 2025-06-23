@@ -752,14 +752,24 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
     total_seconds = 2097152/44100
     use_audio_mask = False
     use_musical_attribute_mask = False
-    if (config["audio_mask_start_seconds"] and config["audio_mask_end_seconds"]) is not None:
+    if (config["audio_mask_start_seconds"] and config["audio_mask_end_seconds"]) != 0:
         use_audio_mask = True
         audio_mask_start = int(config["audio_mask_start_seconds"] / total_seconds * 1024) # 1024 is the latent length for 2097152/44100 seconds
         audio_mask_end = int(config["audio_mask_end_seconds"] / total_seconds * 1024)
-    if (config["musical_attribute_mask_start_seconds"] and config["musical_attribute_mask_end_seconds"]) is not None:
+        print(
+            f"using mask for 'audio' from "
+            f"{config['audio_mask_start_seconds']}~{config['audio_mask_end_seconds']}"
+        )
+    if (config["musical_attribute_mask_start_seconds"] and config["musical_attribute_mask_end_seconds"]) != 0:
         use_musical_attribute_mask = True
         musical_attribute_mask_start = int(config["musical_attribute_mask_start_seconds"] / total_seconds * 1024)
         musical_attribute_mask_end = int(config["musical_attribute_mask_end_seconds"] / total_seconds * 1024)
+        masked_types = [t for t in config['condition_type'] if t != 'audio']
+        print(
+            f"using mask for {', '.join(masked_types)} "
+            f"from {config['musical_attribute_mask_start_seconds']}~"
+            f"{config['musical_attribute_mask_end_seconds']}"
+        )
     if "dynamics" in config["condition_type"]:
         dynamics_condition = compute_dynamics(audio_file)
         dynamics_condition = torch.from_numpy(dynamics_condition).cuda()
@@ -850,6 +860,9 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
             final_condition_audio[:,audio_mask_start:audio_mask_end,:] = 0
     elif config['use_musical_attribute_mask'] and use_musical_attribute_mask:
         final_condition[:,musical_attribute_mask_start:musical_attribute_mask_end,:] = 0
+        if 'final_condition_audio' in locals() and final_condition_audio is not None:
+            final_condition_audio[:,:musical_attribute_mask_start,:] = 0
+            final_condition_audio[:,musical_attribute_mask_end:,:] = 0
     
     return final_condition, final_condition_audio if 'final_condition_audio' in locals() else None
 

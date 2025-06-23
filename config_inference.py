@@ -35,9 +35,9 @@ def get_config():
 
         "use_musical_attribute_mask": False, # Set to true, if you want to mask melody, rhythm, dynamics.
 
-        "musical_attribute_mask_start_seconds": 24,
+        "musical_attribute_mask_start_seconds": 0,
 
-        "musical_attribute_mask_end_seconds": 2097152 / 44100 ,
+        "musical_attribute_mask_end_seconds": 0,
 
         "buffer_seconds": 3, 
         ###############
