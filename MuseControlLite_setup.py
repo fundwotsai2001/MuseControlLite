@@ -844,7 +844,7 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
         final_condition[:,audio_mask_start:audio_mask_end,:] = 0
         config["guidance_scale_con"] = config["guidance_scale_audio"]
     elif "audio" in config["condition_type"] and len(config["condition_type"])!=1 and use_audio_mask:
-        final_condition[:,:audio_mask_start + 100,:] = 0
+        final_condition[:,:audio_mask_start,:] = 0
         final_condition[:,audio_mask_end:,:] = 0
         if 'final_condition_audio' in locals() and final_condition_audio is not None:
             final_condition_audio[:,audio_mask_start:audio_mask_end,:] = 0
