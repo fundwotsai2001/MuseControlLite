@@ -2,7 +2,7 @@ def get_config():
     return {
         # Load files and checkpoints
 
-        "condition_type": ["melody", "rhythm", "dynamics"], #"melody", "rhythm", "dynamics", "audio"
+        "condition_type": ["audio"], #"melody", "rhythm", "dynamics", "audio"
 
         "meta_data_path": "./ALL_condition_wo_SDD.json",
 
@@ -10,20 +10,20 @@ def get_config():
 
         "audio_codec_root": "../mtg_full_47s_codec",
 
-        "output_dir": "./checkpoints/ALL_new_melody_dynamics_v4",
+        "output_dir": "./checkpoints/ALL_audio_dl_weighted_v2",
 
-        "transformer_ckpt":"./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_3.safetensors",
+        "transformer_ckpt": "./checkpoints/ALL_audio_dl_weighted/checkpoint-1000/model.safetensors",
 
         "extractor_ckpt": {
-            "dynamics": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_1.safetensors",
-            "melody": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model.safetensors",
-            "rhythm": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_2.safetensors",
+            # "dynamics": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_1.safetensors",
+            # "melody": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model.safetensors",
+            # "rhythm": "./checkpoints/ALL_new_melody_dynamics_v3/checkpoint-4500/model_2.safetensors",
         },
 
-        "wand_run_name": "ALL_new_melody_dynamics",
+        "wand_run_name": "ALL_audio",
 
         # training hyperparameters
-        "GPU_id" : "0",
+        "GPU_id" : "1",
 
         "train_batch_size": 16,
 
@@ -31,7 +31,7 @@ def get_config():
 
         "attn_processor_type": "rotary", # "rotary", "rotary_conv_in", "absolute" 
 
-        "gradient_accumulation_steps": 16,
+        "gradient_accumulation_steps": 4,
 
         "max_train_steps": 200000,
 
@@ -43,7 +43,7 @@ def get_config():
 
         "apadapter": True,
 
-        "lr_scheduler": "linear", # ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]'
+        "lr_scheduler": "constant", # ["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"]'
 
         "weight_decay": 1e-2,
 
@@ -56,11 +56,11 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 2.0, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
+        "guidance_scale_con": 1.5, # The separated guidance for both Musical attribute and audio conditions. Note that if guidance scale is too large, the audio quality will be bad. Values between 0.5~2.0 is recommended.
 
-        "checkpointing_steps": 500,
+        "checkpointing_steps": 1000,
 
-        "validation_steps": 500,
+        "validation_steps": 1000,
 
         "denoise_step": 50,
 

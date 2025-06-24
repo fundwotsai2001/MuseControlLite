@@ -119,17 +119,14 @@ def log_validation(val_dataloader, condition_type, pipeline, config, weight_dtyp
         if step > config["test_num"]:
             break
         pipeline.transformer.eval()  # Set the transformer to evaluation mode
-        prompt_texts = batch["prompt_texts"]
+        prompt_texts = [""]
         audio_full_path = batch["audio_full_path"]
         ### conditioned
         audio_condition = batch["audio"]
         desired_repeats = 768 // 64  # Number of repeats needed
         extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1)
         masked_extracted_audio_condition = torch.full_like(extracted_audio_condition.to(torch.float32), fill_value=0)
-        if step < 3:
-            extracted_audio_condition[:,:,512:] = 0
-        elif step < 6:
-            extracted_audio_condition[:,:,:512] = 0
+        extracted_audio_condition[:,:,512:] = 0
         extracted_condition = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
         extracted_condition = extracted_condition.transpose(1, 2)
         generator = torch.Generator("cuda").manual_seed(0)
@@ -173,6 +170,33 @@ def check_and_print_non_float32_parameters(model):
             print(f"Parameter: {name}, Data Type: {dtype}")
     else:
         print("All parameters are in float32.")
+import torch
+import math
+
+def _insert_peak_(weights: torch.Tensor,
+                  center: int,
+                  width: int = 10,
+                  peak: float = 2.0):
+    """
+    In-place 將 raised-cosine 權重插入 weights 末軸 (time 軸)。
+    將 curve 的 dtype / device 與 weights 一致，避免 RuntimeError。
+    """
+    T = weights.shape[-1]
+    left  = max(center - width, 0)
+    right = min(center + width + 1, T)
+
+    idx   = torch.arange(left, right, device=weights.device)        # int64
+    dist  = (idx - center).abs().to(weights.dtype)                  # ⇦ dtype 對齊
+
+    # raised-cosine 0~1
+    smooth = 0.5 * (1 + torch.cos(math.pi * dist / width))
+    curve  = 1.0 + (peak - 1.0) * smooth                            # float16 / float32…
+    # 若前一步已經轉 dtype，可省略下行；保險起見再 to 一次
+    curve  = curve.to(dtype=weights.dtype, device=weights.device)
+    # in-place 取最大值
+    weights[..., idx] = torch.maximum(weights[..., idx], curve)
+    return weights
+
 
 def main():
     torch.manual_seed(42)
@@ -376,38 +400,25 @@ def main():
                 prompt_texts = batch["prompt_texts"]
                 desired_repeats = 768 // 64  # Number of repeats needed
                 extracted_audio_condition = latents.repeat_interleave(desired_repeats, dim=1)
+                B, _, T = extracted_audio_condition.shape
+                w = torch.ones((B, 64, T), device="cuda")
                 for i in range(len(prompt_texts)):
                     rand_num = random.random()
                     num1, num2 = random.sample(range(1024), 2)
                     # 50% chance to set prompt_texts[i] to an empty string
+                    if random.random() < 0.5:
+                        prompt_texts[i] = ""           
                     if rand_num < 0.1:
-                        ## all blank
-                        prompt_texts[i] = ""
-                        extracted_audio_condition[i] = torch.zeros_like(extracted_audio_condition[i])                  
-                    elif rand_num < 0.4:
-                        ## 0~num1 : melody, rhythm, dynamics or blank
-                        ## num1~num2 : audio or blank
-                        ## num2~1024: melody, rhythm, dynamics or blank
-                        if random.random() < 0.3:
-                            prompt_texts[i] = ""
-                        if random.random() < 0.7:
-                            extracted_audio_condition[i][:,  : num1] = 0
-                            extracted_audio_condition[i][:, num2 : ] = 0
-                        else:
-                            extracted_audio_condition[i][:, : ] = 0
-                    elif rand_num < 0.7:
-                        ## 0~num1 : audio or blank
-                        ## num1~num2 : melody, rhythm, dynamics or blank
-                        ## num2~1024: audio or blank
-                        if random.random() < 0.3:
-                            prompt_texts[i] = ""
-                        if random.random() < 0.7:
-                            extracted_audio_condition[i][:, num1: num2] = 0
-                        else:
-                            extracted_audio_condition[i][:, : ] = 0
-                if "audio" not in config['condition_type']:
-                    extracted_audio_condition[:,:,:] = 0
-                    print("not using auio")
+                         extracted_audio_condition[i] = 0
+                    else:
+                        segment_length = random.randint(340, 900)
+                        start_index = random.randint(
+                            0, 
+                            extracted_audio_condition[i].shape[1] - segment_length
+                        )
+                        extracted_audio_condition[i][:, start_index : start_index + segment_length] = 0
+                        w[i] = _insert_peak_(w[i], start_index,               width=200, peak=2.0)
+                        w[i] = _insert_peak_(w[i], start_index + segment_length - 1,width=200, peak=2.0)
                 with torch.no_grad():
                     prompt_embeds = pipeline.encode_prompt(
                         prompt=prompt_texts,
@@ -450,7 +461,9 @@ def main():
                         return_dict=False,
                     )[0]
                     # Compute the loss
-                    loss = F.mse_loss(model_pred, targets, reduction="mean")
+                    sq_err = F.mse_loss(model_pred, targets, reduction="none")
+                    weighted_sq_err = sq_err * w 
+                    loss = weighted_sq_err.sum() / w.sum()   
                 # Backpropagation
                 accelerator.backward(loss)
                 if accelerator.sync_gradients:
