@@ -8,6 +8,7 @@ We have updated the results for MuseControlLite-stereo-Melody, which processes t
 ## Todo (updated 6/23)
 - [x] [Colab impementation](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3?usp=sharing) (Thanks to [YianLai0327](https://github.com/YianLai0327))
 - [x] MuseControlLite with the diffusers libary
+- [ ] **Release the checkpoint for audio condition (As soon as possible!)**
 - [ ] MuseControlLite with the stable-audio-tools libary
 - [ ] Put model on Huggingface
 - [ ] Provide scale-up version
@@ -33,7 +34,7 @@ To use the stable-audio open 1.0 model, you will need to a token generated from 
 huggingface-cli login
 ```
 ## Inference
-All the hyper-parameters could be found in `config_inference.py`, we provide detailed comments as guidance, especially, you can use set the conditions for `"condition_type"`. Run:
+All the hyper-parameters could be found in `config_inference.py`, we provide detailed comments as guidance, especially, you can use set the conditions for `"condition_type"`. **The set of adapters for audio condition are not available, we will release it as soon as possible**. Run:
 ```
 python MuseControlLite_inference.py
 ```

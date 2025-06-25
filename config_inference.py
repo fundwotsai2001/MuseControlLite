@@ -28,7 +28,7 @@ def get_config():
 
         ###############
 
-        "audio_mask_start_seconds": 24, # Apply mask to musical attributes choose only one mask to use, it automatically generates a complemetary mask to the other condition
+        "audio_mask_start_seconds": 14, # Apply mask to musical attributes choose only one mask to use, it automatically generates a complemetary mask to the other condition
 
         "audio_mask_end_seconds": 47, 
 
@@ -42,35 +42,35 @@ def get_config():
 
         "show_result_and_plt": False,
 
-        # "audio_files": [
-        #     "melody_condition_audio/49_piano.mp3",
-        #     "melody_condition_audio/49_piano.mp3",
-        #     "melody_condition_audio/49_piano.mp3",
-        #     "melody_condition_audio/322_piano.mp3",
-        #     "melody_condition_audio/322_piano.mp3",
-        #     "melody_condition_audio/322_piano.mp3",
-        #     "melody_condition_audio/610_bass.mp3",
-        #     "melody_condition_audio/610_bass.mp3",
-        #     "melody_condition_audio/785_piano.mp3",
-        #     "melody_condition_audio/785_piano.mp3",
-        #     "melody_condition_audio/933_string.mp3",
-        #     "melody_condition_audio/933_string.mp3",
-        #     "melody_condition_audio/6_uke_12.wav",
-        #     "melody_condition_audio/6_uke_12.wav",
-        #     "melody_condition_audio/57_jazz.mp3",
-        #     "melody_condition_audio/703_mideast.mp3",
-
-        # ],
         "audio_files": [
-            "SDD_nosinging/SDD_audio/34/1004034.mp3",
-            "original_15s/original_9.wav",
-            "original_15s/original_10.wav",
-            "original_15s/original_11.wav",
-            "original_15s/original_15.wav",
-            "original_15s/original_16.wav",
-            "original_15s/original_21.wav",
-            "original_15s/original_25.wav",
+            "melody_condition_audio/49_piano.mp3",
+            "melody_condition_audio/49_piano.mp3",
+            "melody_condition_audio/49_piano.mp3",
+            "melody_condition_audio/322_piano.mp3",
+            "melody_condition_audio/322_piano.mp3",
+            "melody_condition_audio/322_piano.mp3",
+            "melody_condition_audio/610_bass.mp3",
+            "melody_condition_audio/610_bass.mp3",
+            "melody_condition_audio/785_piano.mp3",
+            "melody_condition_audio/785_piano.mp3",
+            "melody_condition_audio/933_string.mp3",
+            "melody_condition_audio/933_string.mp3",
+            "melody_condition_audio/6_uke_12.wav",
+            "melody_condition_audio/6_uke_12.wav",
+            "melody_condition_audio/57_jazz.mp3",
+            "melody_condition_audio/703_mideast.mp3",
+
         ],
+        # "audio_files": [
+        #     "SDD_nosinging/SDD_audio/34/1004034.mp3",
+        #     "original_15s/original_9.wav",
+        #     "original_15s/original_10.wav",
+        #     "original_15s/original_11.wav",
+        #     "original_15s/original_15.wav",
+        #     "original_15s/original_16.wav",
+        #     "original_15s/original_21.wav",
+        #     "original_15s/original_25.wav",
+        # ],
 
         "text": [
                 "Electronic music that has a constant melody throughout with accompanying instruments used to supplement the melody which can be heard in possibly a casual setting",
@@ -112,7 +112,7 @@ def get_config():
 
         # Works for ['audio], it works without a feature extractor, and could cooperate with other adapters
         #################
-        "audio_transformer_ckpt": "./checkpoints/70000_Audio/model.safetensors",
+        "audio_transformer_ckpt": "./model.safetensors",
 
         # Specialized for ['melody_stereo']
         ###############
