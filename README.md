@@ -69,7 +69,7 @@ The training code used preprocessed latents, so that we can skip the VAE encodin
 python stable_audio_VAE_encode.py --audio_folder "../mtg_full_47s" --meta_path "./Qwen_caption.json" --latent_dir "./Jamendo_audio_47s_latent" --batch_size 1
 ```
 ### MuseControlLite training
-*All training hyper-parameters could be found in `config_training.py`. 
+We recommend training MuseControlLite with your own data, since the released checkpoints are only trained on the MTG-Jamendo dataset (mostly electronics). All training hyper-parameters could be found in `config_training.py`. 
 If you want to train a model that can deal with all musical attribute conditions, simply set `"condition_type": ["dynamics", "rhythm", "melody"]`, and run:
 ```
 python MuseControlLite_train_all.py
