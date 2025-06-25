@@ -1,8 +1,8 @@
 def get_config():
     return {
-        "condition_type": ["melody_stereo"], #  you can choose any combinations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
+        "condition_type": ["audio"], #  you can choose any combinations in the two sets: ["dynamics", "rhythm", "melody_mono", "audio"],  ["melody_stereo", "audio"]
                                     # When using audio, is recommend to use empty string "" as prompt
-        "output_dir": "./generated_audio/test32",
+        "output_dir": "./generated_audio/outpainting",
 
         "GPU_id": "0",
 
@@ -12,9 +12,9 @@ def get_config():
 
         "guidance_scale_text": 7.0,
 
-        "guidance_scale_con": 1.0, # The separated guidance for Musical attribute condition
+        "guidance_scale_con": 1.5, # The separated guidance for Musical attribute condition
         
-        "guidance_scale_audio": 0.5,
+        "guidance_scale_audio": 1.0,
         
         "denoise_step": 50,
 
@@ -22,48 +22,58 @@ def get_config():
 
         "sigma_max": 500,  # Note that if sigma_max is too large or too small, the "audio condition generation" will be bad.
 
-        "weight_dtype": "fp32", # fp16 and fp32 sounds quiet the same.
+        "weight_dtype": "fp16", # fp16 and fp32 sounds quiet the same.
 
-        "negative_text_prompt": "Low qualiy, noise",
+        "negative_text_prompt": "",
 
         ###############
 
         "audio_mask_start_seconds": 24, # Apply mask to musical attributes choose only one mask to use, it automatically generates a complemetary mask to the other condition
 
-        "audio_mask_end_seconds": 50, 
+        "audio_mask_end_seconds": 47, 
 
         "musical_attribute_mask_start_seconds": 0, # 'Apply mask to audio condition, choose only one mask to use, it automatically generates a complemetary mask to the other condition'
 
         "musical_attribute_mask_end_seconds": 0,
 
-        "buffer_seconds": 3, 
         ###############
 
-        "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
+        "no_text": True, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
 
         "show_result_and_plt": False,
 
-        "audio_files": [
-            "melody_condition_audio/49_piano.mp3",
-            "melody_condition_audio/49_piano.mp3",
-            "melody_condition_audio/49_piano.mp3",
-            "melody_condition_audio/322_piano.mp3",
-            "melody_condition_audio/322_piano.mp3",
-            "melody_condition_audio/322_piano.mp3",
-            "melody_condition_audio/610_bass.mp3",
-            "melody_condition_audio/610_bass.mp3",
-            "melody_condition_audio/785_piano.mp3",
-            "melody_condition_audio/785_piano.mp3",
-            "melody_condition_audio/933_string.mp3",
-            "melody_condition_audio/933_string.mp3",
-            "melody_condition_audio/6_uke_12.wav",
-            "melody_condition_audio/6_uke_12.wav",
-            "melody_condition_audio/57_jazz.mp3",
-            "melody_condition_audio/703_mideast.mp3",
+        # "audio_files": [
+        #     "melody_condition_audio/49_piano.mp3",
+        #     "melody_condition_audio/49_piano.mp3",
+        #     "melody_condition_audio/49_piano.mp3",
+        #     "melody_condition_audio/322_piano.mp3",
+        #     "melody_condition_audio/322_piano.mp3",
+        #     "melody_condition_audio/322_piano.mp3",
+        #     "melody_condition_audio/610_bass.mp3",
+        #     "melody_condition_audio/610_bass.mp3",
+        #     "melody_condition_audio/785_piano.mp3",
+        #     "melody_condition_audio/785_piano.mp3",
+        #     "melody_condition_audio/933_string.mp3",
+        #     "melody_condition_audio/933_string.mp3",
+        #     "melody_condition_audio/6_uke_12.wav",
+        #     "melody_condition_audio/6_uke_12.wav",
+        #     "melody_condition_audio/57_jazz.mp3",
+        #     "melody_condition_audio/703_mideast.mp3",
 
+        # ],
+        "audio_files": [
+            "SDD_nosinging/SDD_audio/34/1004034.mp3",
+            "original_15s/original_9.wav",
+            "original_15s/original_10.wav",
+            "original_15s/original_11.wav",
+            "original_15s/original_15.wav",
+            "original_15s/original_16.wav",
+            "original_15s/original_21.wav",
+            "original_15s/original_25.wav",
         ],
 
         "text": [
+                "Electronic music that has a constant melody throughout with accompanying instruments used to supplement the melody which can be heard in possibly a casual setting",
                 "A heartfelt, warm acoustic guitar performance, evoking a sense of tenderness and deep emotion, with a melody that truly resonates and touches the heart.",     
                 "A vibrant MIDI electronic composition with a hopeful and optimistic vibe.",
                 "This track composed of electronic instruments gives a sense of opening and clearness.",

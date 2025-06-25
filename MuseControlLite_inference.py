@@ -43,6 +43,7 @@ def main(config):
                 final_condition, final_condition_audio = process_musical_conditions(config, audio_file, condition_extractors, output_dir, i, weight_dtype, MuseControlLite)
                 if config["no_text"] is True:
                     prompt_texts = ""
+                print("prompt_texts", prompt_texts)
                 waveform = MuseControlLite(
                     extracted_condition=final_condition, 
                     extracted_condition_audio=final_condition_audio,

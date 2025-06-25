@@ -6,10 +6,9 @@ from torchaudio import transforms as T
 import os
 from utils.stable_audio_dataset_utils import Stereo, Mono, PhaseFlipper, PadCrop_Normalized_T
 from torch.utils.data import Dataset, random_split, DataLoader
-from MuseControlLite_inference_on_the_fly_all import load_audio_file
+from MuseControlLite_setup import load_audio_file
 import json
 from tqdm import tqdm
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 import argparse
 class AudioInversionDataset(Dataset):
     def __init__(

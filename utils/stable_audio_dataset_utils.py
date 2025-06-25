@@ -26,14 +26,14 @@ def load_audio_file(filename, target_sr=44100, target_samples=2097152):
         # audio.shape is [channels, samples]
         num_samples = audio.shape[-1]
 
-        if num_samples < target_samples:
-            # Pad if it's too short
-            pad_amount = target_samples - num_samples
-            # Zero-pad at the end (or randomly if you prefer)
-            audio = F.pad(audio, (0, pad_amount)) 
-            print(f"pad {pad_amount}")
-        else:
-            audio = audio[:, :target_samples]
+        # if num_samples < target_samples:
+        #     # Pad if it's too short
+        #     pad_amount = target_samples - num_samples
+        #     # Zero-pad at the end (or randomly if you prefer)
+        #     audio = F.pad(audio, (0, pad_amount)) 
+        #     print(f"pad {pad_amount}")
+        # else:
+        audio = audio[:, :target_samples]
         return audio
     except RuntimeError:
         print(f"Failed to decode audio file: {filename}")

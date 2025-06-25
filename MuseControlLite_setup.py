@@ -839,6 +839,10 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
         if audio is not None:
             audio_condition = MuseControlLite.vae.encode(audio.unsqueeze(0).to(weight_dtype).cuda()).latent_dist.sample()
             extracted_audio_condition = audio_condition.repeat_interleave(desired_repeats, dim=1).float()
+            pad_len = 1024 - extracted_audio_condition.shape[-1]
+            if pad_len > 0:
+                # Pad on the right side (last dimension)
+                extracted_audio_condition = F.pad(extracted_audio_condition, (0, pad_len)) 
             masked_extracted_audio_condition = torch.zeros_like(extracted_audio_condition)
             if len(config["condition_type"]) == 1:
                 final_condition = torch.concat((masked_extracted_audio_condition, masked_extracted_audio_condition, extracted_audio_condition), dim=0)
@@ -849,9 +853,10 @@ def process_musical_conditions(config, audio_file, condition_extractors, output_
         else:
             final_condition_audio = None
     final_condition = final_condition.transpose(1, 2)
-    if "audio" in config["condition_type"] and len(config["condition_type"])==1 and use_audio_mask:
+    if "audio" in config["condition_type"] and len(config["condition_type"])==1:
         final_condition[:,audio_mask_start:audio_mask_end,:] = 0
-        config["guidance_scale_con"] = config["guidance_scale_audio"]
+        if use_audio_mask:
+            config["guidance_scale_con"] = config["guidance_scale_audio"]
     elif "audio" in config["condition_type"] and len(config["condition_type"])!=1 and use_audio_mask:
         final_condition[:,:audio_mask_start,:] = 0
         final_condition[:,audio_mask_end:,:] = 0
