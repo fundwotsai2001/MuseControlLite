@@ -1,6 +1,7 @@
 # MuseControlLite
 
 This is the official implementation of MuseControlLite (ICML2025).
+MuseControlLite is a fine-tuning method built on [stable-audio-open-1.0](https://huggingface.co/stabilityai/stable-audio-open-1.0) It currently supports melody, dynamics, rhythm, and audio conditioning (inpainting and outpainting), all of which can be used in any combination.
 [paper]() | [demo](https://musecontrollite.github.io/web/) | [colab](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3)
 ![Alt Text](Melody_result.png)
 We have updated the results for MuseControlLite-stereo-Melody, which processes the melody of the two audio channels separately (same as ControlNet) and delivers an additional performance boost, results in **melody acuracy 7.6 % higher then ControlNet**. By contrast, the results reported in the paper mixed the melody from both channels.
