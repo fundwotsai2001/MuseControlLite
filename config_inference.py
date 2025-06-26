@@ -38,7 +38,7 @@ def get_config():
 
         ###############
 
-        "no_text": True, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
+        "no_text": False, # Optional, set to true if no text prompt is needed (possible for audio inpainting or outpainting)
 
         "show_result_and_plt": False,
 
