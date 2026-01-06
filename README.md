@@ -1,17 +1,22 @@
-# MuseControlLite
+# <img src="sound-wave.png" alt="Alt Text" width="45" />  MuseControlLite
+
+#### Updates (2026/1/2)
+New time-varying control methods in [Text-to-Music control family](https://github.com/fundwotsai2001/Text-to-Music_control_family), contains both [MuseControlLite📑](https://openreview.net/forum?id=VK47MdCjBH) and [SongEcho📑](https://openreview.net/forum?id=TEKOayiQg2), and the checkpoints for melody conditions (others may be updated in the future) are on [🤗HuggingFace](https://huggingface.co/fundwotsai2001/Text-to-Music_control_family).
 
 This is the official implementation of MuseControlLite (ICML2025).
 MuseControlLite is a fine-tuning method built on [stable-audio-open-1.0](https://huggingface.co/stabilityai/stable-audio-open-1.0) It currently supports melody, dynamics, rhythm, and audio conditioning (inpainting and outpainting), all of which can be used in any combination.
-[paper](https://www.arxiv.org/abs/2506.18729) | [demo](https://musecontrollite.github.io/web/) | [colab](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3)
+[📰paper](https://www.arxiv.org/abs/2506.18729) | [🎸demo](https://musecontrollite.github.io/web/) | [🚀colab](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3) | [🤗HuggingFace (2026/1/2 update)](https://huggingface.co/fundwotsai2001/Text-to-Music_control_family)
+
+
 ![Alt Text](Melody_result.png)
 We have updated the results for MuseControlLite-stereo-Melody, which processes the melody of the two audio channels separately (same as ControlNet) and delivers an additional performance boost, results in **melody acuracy 7.6 % higher then ControlNet**. By contrast, the results reported in the paper mixed the melody from both channels.
 We povide captions for the MTG-Jamendo dataset in `ALL_condition_wo_SDD.json`, excluding any audio clips that contain vocals.
-## Todo (updated 7/1)
+## Todo (updated 2026/1/1)
 - [x] [Colab impementation](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3?usp=sharing) (Thanks to [YianLai0327](https://github.com/YianLai0327))
 - [x] MuseControlLite with the diffusers libary
 - [x] **Release the checkpoint for audio condition (As soon as possible!)**
 - [ ] MuseControlLite with the stable-audio-tools libary
-- [ ] Put model on Huggingface
+- [x] Put model on Huggingface
 - [ ] Provide scale-up version
 
 ## Installation
