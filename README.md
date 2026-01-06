@@ -1,10 +1,11 @@
 # <img src="sound-wave.png" alt="Alt Text" width="45" />  MuseControlLite
 
 #### Updates (2026/1/2)
-New time-varying control methods in [Text-to-Music control family](https://github.com/fundwotsai2001/Text-to-Music_control_family), contains both [MuseControlLite📑](https://openreview.net/forum?id=VK47MdCjBH) and [SongEcho📑](https://openreview.net/forum?id=TEKOayiQg2), and the checkpoints for melody conditions (others may be updated in the future) are on [🤗HuggingFace](https://huggingface.co/fundwotsai2001/Text-to-Music_control_family).
+New time-varying control methods in [Text-to-Music control family](https://github.com/fundwotsai2001/Text-to-Music_control_family), contains both [MuseControlLite](https://openreview.net/forum?id=VK47MdCjBH) and [SongEcho](https://openreview.net/forum?id=TEKOayiQg2), and the checkpoints for melody conditions (others may be updated in the future) are on [🤗HuggingFace](https://huggingface.co/fundwotsai2001/Text-to-Music_control_family).
 
 This is the official implementation of MuseControlLite (ICML2025).
 MuseControlLite is a fine-tuning method built on [stable-audio-open-1.0](https://huggingface.co/stabilityai/stable-audio-open-1.0) It currently supports melody, dynamics, rhythm, and audio conditioning (inpainting and outpainting), all of which can be used in any combination.
+
 [📰paper](https://www.arxiv.org/abs/2506.18729) | [🎸demo](https://musecontrollite.github.io/web/) | [🚀colab](https://colab.research.google.com/drive/1rR-Ncng_gSeb6hX0LY20SA4O9RCF-ZF3) | [🤗HuggingFace (2026/1/2 update)](https://huggingface.co/fundwotsai2001/Text-to-Music_control_family)
 
 
